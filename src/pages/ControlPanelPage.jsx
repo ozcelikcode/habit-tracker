@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, Pencil, Save, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ThemeMenu from '../components/ThemeMenu.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
@@ -12,11 +13,21 @@ const NAV_LINKS = [
 
 const HABIT_ICONS = ['self_improvement', 'fitness_center', 'auto_stories', 'water_drop', 'spa'];
 const CATEGORY_OPTIONS = ['Genel', 'Sağlık', 'Spor', 'Odak', 'Hobi'];
+const STATUS_FLOW = ['backlog', 'active', 'done'];
+const STATUS_LABELS = {
+  backlog: 'Beklemede',
+  active: 'Aktif',
+  done: 'Tamamlandı',
+};
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'Tümü' },
+  { value: 'active', label: 'Aktif' },
+  { value: 'done', label: 'Tamamlanan' },
+];
 
 function ControlPanelPage() {
-  const { data, loading, error, refetch } = useDashboardData();
+  const { data, loading, error, refetch, setData } = useDashboardData();
   const habits = data?.habits ?? [];
-  const todayTasks = data?.todayTasks ?? [];
   const suggestions = data?.suggestions ?? [];
   const upcoming = data?.upcomingTasks ?? [];
   const statusMessage = loading ? 'Veriler yükleniyor...' : error ? 'Veriler alınamadı.' : null;
@@ -29,6 +40,37 @@ function ControlPanelPage() {
   const [sidebarHabitCategory, setSidebarHabitCategory] = useState(CATEGORY_OPTIONS[0]);
   const [creating, setCreating] = useState(false);
   const [sidebarCreating, setSidebarCreating] = useState(false);
+  const [taskFilter, setTaskFilter] = useState('all');
+  const [tasks, setTasks] = useState([]);
+  const [isTaskDirty, setIsTaskDirty] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editValues, setEditValues] = useState({ title: '', category: CATEGORY_OPTIONS[0], status: 'active' });
+
+  const todayTasks = data?.todayTasks ?? [];
+
+  useEffect(() => {
+    if (!todayTasks) {
+      return;
+    }
+    if (isTaskDirty) {
+      return;
+    }
+    const mapped = todayTasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      category: task.category ?? 'Genel',
+      date: task.date,
+      status: task.completed ? 'done' : 'active',
+    }));
+    setTasks(mapped);
+  }, [todayTasks, isTaskDirty]);
+
+  const filteredTasks = useMemo(() => {
+    if (taskFilter === 'all') return tasks;
+    if (taskFilter === 'done') return tasks.filter((task) => task.status === 'done');
+    if (taskFilter === 'active') return tasks.filter((task) => task.status === 'active');
+    return tasks;
+  }, [taskFilter, tasks]);
 
   const togglePending = (id, shouldAdd) => {
     setPendingIds((prev) => {
@@ -41,16 +83,70 @@ function ControlPanelPage() {
 
   const handleToggleTask = async (task) => {
     if (pendingIds.has(task.id)) return;
+    const nextStatus = task.status === 'done' ? 'active' : 'done';
+    const previousTasks = tasks;
+    setTasks((prev) =>
+      prev.map((item) => (item.id === task.id ? { ...item, status: nextStatus } : item))
+    );
+    setIsTaskDirty(true);
     try {
       togglePending(task.id, true);
       setActionError(null);
-      await toggleHabitEntry({ habitId: task.id, date: task.date });
-      await refetch();
+      const response = await toggleHabitEntry({ habitId: task.id, date: task.date });
+      if (response.dashboard) {
+        setData(response.dashboard);
+      }
     } catch (err) {
+      setTasks(previousTasks);
       setActionError(err.message || 'Görev güncellenemedi');
     } finally {
       togglePending(task.id, false);
     }
+  };
+
+  const handleDeleteTask = (taskId) => {
+    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+    setIsTaskDirty(true);
+  };
+
+  const handleMoveTask = (taskId, direction) => {
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== taskId) return task;
+        const currentIndex = STATUS_FLOW.indexOf(task.status);
+        const nextIndex = Math.min(Math.max(currentIndex + direction, 0), STATUS_FLOW.length - 1);
+        return {
+          ...task,
+          status: STATUS_FLOW[nextIndex],
+        };
+      })
+    );
+    setIsTaskDirty(true);
+  };
+
+  const startEditingTask = (task) => {
+    setEditingTaskId(task.id);
+    setEditValues({ title: task.title, category: task.category, status: task.status });
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveEdit = () => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === editingTaskId
+          ? { ...task, title: editValues.title, category: editValues.category, status: editValues.status }
+          : task
+      )
+    );
+    setEditingTaskId(null);
+    setIsTaskDirty(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
   };
 
   const submitHabit = async ({ name, category }, setStateFn) => {
@@ -62,6 +158,7 @@ function ControlPanelPage() {
       setActionError(null);
       setStateFn(true);
       await createHabit({ name: name.trim(), category: category?.trim() || CATEGORY_OPTIONS[0] });
+      setIsTaskDirty(false);
       await refetch();
       return true;
     } catch (err) {
@@ -256,52 +353,144 @@ function ControlPanelPage() {
             </div>
 
             <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-muted">
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
                 <div className="grid flex-1 gap-3 sm:grid-cols-3">
-                  {['Tümü', 'Aktif', 'Tamamlanan'].map((filter, index) => (
+                  {FILTER_OPTIONS.map((filter) => (
                     <button
-                      key={filter}
+                      key={filter.value}
                       type="button"
+                      onClick={() => setTaskFilter(filter.value)}
                       className={`rounded-xl px-4 py-2 transition ${
-                        index === 1 ? 'bg-foreground/10 text-foreground' : 'bg-foreground/5 hover:text-foreground'
+                        taskFilter === filter.value
+                          ? 'bg-primary/20 text-primary'
+                          : 'bg-foreground/5 hover:text-foreground'
                       }`}
                     >
-                      {filter}
+                      {filter.label}
                     </button>
                   ))}
                 </div>
-                <span className="text-xs text-muted">Filtreler (yakında)</span>
               </div>
               <div className="space-y-4">
-                {todayTasks.map((task) => (
-                  <label
+                {filteredTasks.map((task) => (
+                  <div
                     key={task.id}
-                    className="group flex flex-col gap-3 rounded-2xl border border-border bg-card-deep/80 p-4 md:flex-row md:items-center md:justify-between"
+                    className="group flex flex-col gap-3 rounded-2xl border border-border bg-card-deep/80 p-4"
                   >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={task.completed}
-                        onChange={() => handleToggleTask(task)}
-                        disabled={pendingIds.has(task.id)}
-                        className="peer sr-only"
-                      />
-                      <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-md border border-border/70 text-transparent transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-on-primary">
-                        <span className="material-symbols-outlined text-[0.9rem] leading-none">check</span>
-                      </span>
-                      <div>
-                        <p className={`text-lg font-semibold ${task.completed ? 'text-muted line-through' : ''}`}>
-                          {task.title}
-                        </p>
-                        <p className="text-sm text-muted">Bugün</p>
+                    {editingTaskId === task.id ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editValues.title}
+                          onChange={(event) => handleEditChange('title', event.target.value)}
+                          className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                          placeholder="Görev adı"
+                        />
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <input
+                            type="text"
+                            value={editValues.category}
+                            onChange={(event) => handleEditChange('category', event.target.value)}
+                            className="flex-1 rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                            placeholder="Kategori"
+                          />
+                          <select
+                            value={editValues.status}
+                            onChange={(event) => handleEditChange('status', event.target.value)}
+                            className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                          >
+                            {STATUS_FLOW.map((status) => (
+                              <option key={status} value={status} className="bg-background-alt text-foreground">
+                                {STATUS_LABELS[status]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSaveEdit}
+                            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary/80"
+                          >
+                            <Save size={14} /> Kaydet
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-muted transition hover:border-primary hover:text-foreground"
+                          >
+                            <X size={14} /> Vazgeç
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <span className="self-start rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold text-muted md:self-center">
-                      {task.category ?? 'Genel'}
-                    </span>
-                  </label>
+                    ) : (
+                      <>
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={task.status === 'done'}
+                            onChange={() => handleToggleTask(task)}
+                            disabled={pendingIds.has(task.id)}
+                            className="peer sr-only"
+                          />
+                          <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-md border border-border/70 text-transparent transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-on-primary">
+                            <span className="material-symbols-outlined text-[0.9rem] leading-none">check</span>
+                          </span>
+                          <div>
+                            <p className={`text-lg font-semibold ${task.status === 'done' ? 'text-muted line-through' : ''}`}>
+                              {task.title}
+                            </p>
+                            <p className="text-sm text-muted">{task.category ?? 'Genel'}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveTask(task.id, -1)}
+                              disabled={task.status === STATUS_FLOW[0]}
+                              className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground disabled:opacity-40"
+                              aria-label="Sola taşı"
+                            >
+                              <ArrowLeft size={14} />
+                            </button>
+                            <span className="rounded-full border border-border/60 px-2 py-1 text-xs font-semibold text-muted">
+                              {STATUS_LABELS[task.status]}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveTask(task.id, 1)}
+                              disabled={task.status === STATUS_FLOW[STATUS_FLOW.length - 1]}
+                              className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground disabled:opacity-40"
+                              aria-label="Sağa taşı"
+                            >
+                              <ArrowRight size={14} />
+                            </button>
+                          </div>
+                          <div className="ml-auto flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => startEditingTask(task)}
+                              className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground"
+                              aria-label="Görevi düzenle"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTask(task.id)}
+                              className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-red-300"
+                              aria-label="Görevi sil"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 ))}
-                {!todayTasks.length && <p className="text-sm text-muted">Bugün için görev bulunamadı.</p>}
+                {!filteredTasks.length && <p className="text-sm text-muted">Bugün için görev bulunamadı.</p>}
               </div>
             </div>
 

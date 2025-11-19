@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeMenu from '../components/ThemeMenu.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
@@ -22,6 +22,8 @@ function HomePage() {
   const { data, loading, error, refetch } = useDashboardData();
   const [pendingIds, setPendingIds] = useState(new Set());
   const [actionError, setActionError] = useState(null);
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, label: '' });
+  const heatmapRef = useRef(null);
 
   const statsCards = [
     { label: 'Mevcut Seri', value: data ? `${data.stats.currentStreak} gün` : '--' },
@@ -33,6 +35,21 @@ function HomePage() {
   const monthLabels = data?.heatmapMonths ?? MONTH_FALLBACK;
   const todayTasks = data?.todayTasks ?? [];
   const statusMessage = loading ? 'Veriler yükleniyor...' : error ? 'Veriler alınamadı.' : null;
+  const handleCellEnter = (event, day) => {
+    if (!heatmapRef.current) return;
+    const containerRect = heatmapRef.current.getBoundingClientRect();
+    const cellRect = event.currentTarget.getBoundingClientRect();
+    setTooltip({
+      visible: true,
+      x: cellRect.left - containerRect.left + cellRect.width / 2,
+      y: cellRect.top - containerRect.top - 6,
+      label: day.value > 0 ? `${day.value} görev tamamlandı` : 'Hiç görev tamamlanmadı',
+    });
+  };
+
+  const handleCellLeave = () => {
+    setTooltip((prev) => ({ ...prev, visible: false }));
+  };
 
   const togglePending = (id, shouldAdd) => {
     setPendingIds((prev) => {
@@ -117,7 +134,7 @@ function HomePage() {
                 <h2 className="text-xl font-semibold">Alışkanlık Aktivitesi</h2>
                 <p className="mt-1 text-sm text-muted">Renk ne kadar koyuysa o kadar çok alışkanlık tamamlanmış demektir.</p>
               </div>
-              <div>
+              <div className="relative" ref={heatmapRef}>
                 <div className="flex justify-between px-1 text-xs text-muted sm:px-3">
                   {monthLabels.map((month) => (
                     <span key={month}>{month}</span>
@@ -129,7 +146,8 @@ function HomePage() {
                       {week.map((day, dayIndex) => (
                         <span
                           key={`day-${weekIndex}-${dayIndex}`}
-                          title={day.date ? `${day.date}: ${day.value} tamamlanan` : undefined}
+                          onMouseEnter={(event) => handleCellEnter(event, day)}
+                          onMouseLeave={handleCellLeave}
                           className={`h-3.5 w-3.5 rounded-sm ${getIntensityClass(day.intensity)}`}
                         />
                       ))}
@@ -143,6 +161,14 @@ function HomePage() {
                   ))}
                   <span>Çok</span>
                 </div>
+                {tooltip.visible && (
+                  <div
+                    className="pointer-events-none absolute rounded-lg border border-border bg-card px-3 py-1 text-xs text-foreground/80"
+                    style={{ left: tooltip.x, top: tooltip.y }}
+                  >
+                    {tooltip.label}
+                  </div>
+                )}
               </div>
             </div>
           </section>

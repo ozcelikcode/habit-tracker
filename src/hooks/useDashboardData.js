@@ -26,5 +26,5 @@ export function useDashboardData() {
     fetchData();
   }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: fetchData, setData };
 }

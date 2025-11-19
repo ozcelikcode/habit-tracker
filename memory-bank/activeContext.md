@@ -1,20 +1,21 @@
 ## Active Context
 
 ### Current Focus
-- Tam etkileşimli akışların yanında, kullanıcıya temayı tamamen değiştirme imkânı sunmak (birden fazla renk paleti + light/dark mod).
+- Tam etkileşimli görev akışlarını stabilize etmek ve UI bileşenlerini (checkbox, dropdown vb.) tasarımla uyumlu hale getirmek; aynı zamanda tema/palet sistemi korunuyor.
 
 ### Recent Activity
-- Express API genişletilerek alışkanlık ekleme ve günlük girişleri toggle etme desteklendi; UI’daki checkbox’lar API’ye bağlı çalışıyor.
-- Control Panel’de ana form + sidebar formu ile yeni alışkanlık ekleme, kategori seçimi ve öneri chip’leri uygulandı.
-- Geliştirme sırasında `npm run dev:all` komutuyla Vite ve Express aynı anda çalıştırılabiliyor (proxy hatası yok).
-- Tema sistemi yeniden kuruldu: CSS değişkenleri üzerinden Tailwind renk token’ları tanımlandı; ThemeProvider + ThemeMenu ile 3 palet ve light/dark modu arasında geçiş yapılabiliyor.
+- Express API üzerinden alışkanlık ekleme ve günlük giriş toggle akışı tamamlandı; UI checkbox’ları API’ya bağlı çalışıyor.
+- Control Panel’de hem ana form hem de sidebar formu ile yeni alışkanlık ekleme, kategori seçimi ve öneri chip’leri tasarlandı.
+- `npm run dev:all` komutu ile Vite + Express eş zamanlı çalışıyor.
+- Tema sistemi (ThemeProvider + ThemeMenu) ile 3 palet + light/dark modu arasında geçiş yapılabiliyor.
+- Mobil navigasyon/çekmece yapıları eklendi; checkbox ve dropdown’lar tekrar tasarım yönergelerine sadık hale getirildi.
 
 ### Next Steps
-1. Alışkanlık silme/düzenleme, miktar girme ve geçmiş tarih işlemleri gibi gelişmiş CRUD özellikleri.
-2. React Query vb. ile optimistik güncellemeler ve caching (şu an her işlemde refetch).
-3. Görev filtreleri (Tümü/Aktif/Tamamlanan) ve heatmap tarih aralığı için gerçek filtreleme mantıkları.
+1. Alışkanlık/görev silme-düzenleme ve geçmiş tarih girişleri gibi gelişmiş CRUD senaryoları.
+2. React Query veya benzeri cache yönetimiyle optimistik güncellemeler (şu an her işlemde refetch ediliyor).
+3. Görev filtreleri ve heatmap tarih aralıkları için gerçek veri filtreleme mantıkları + oturum bazlı state senkronizasyonu.
 
 ### Considerations
-- API hâlen tek kullanıcı/kimlik doğrulamasız; ileride auth + migration planlanmalı.
-- Yeni bileşenler eklenirken `text-foreground`, `bg-card`, `border-border` gibi CSS-değişken tabanlı sınıflar kullanılmalı ki tema değişikliğinde bozulma olmasın.
-- Form doğrulamaları ve geri bildirim (toast/modal) akışları eklenerek UX güçlendirilmeli.
+- API hâlen tek kullanıcı ve kimlik doğrulamasız; ileride auth + migration ele alınmalı.
+- Tema sistemi CSS değişkenleri üzerinden çalışıyor; yeni bileşenlerde `text-foreground`, `bg-card`, `border-border` gibi token sınıfları kullanılmalı.
+- Form/doğrulama ve toast/modal bildirimleri ekleyerek UX güçlendirilmeli.

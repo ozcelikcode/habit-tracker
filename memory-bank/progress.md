@@ -5,4 +5,4 @@
 - **2025-11-19 (night)**: Express + SQLite backend (`/api/dashboard`) yazıldı, seed verileri üretildi; frontend `useDashboardData` ile gerçek API’dan heatmap/istatistik/görev çekiyor.
 - **2025-11-20**: `/api/habits` ve `/api/habit-entries/toggle` uçlarıyla alışkanlık ekleme ve görev tamamlama DB’ye yazılıyor; Control Panel formları tamamlandı.
 - **2025-11-20 (later)**: `npm run dev:all` komutu eklendi (concurrently ile API + Vite birlikte çalışıyor), README güncellendi.
-- **2025-11-21**: Tema sistemi (ThemeProvider + ThemeMenu) eklendi; CSS değişkenleri/ Tailwind token’ları ile 3 palet ve light/dark mod arayüz genelinde uygulanabiliyor.
+- **2025-11-21**: Tema sistemi (ThemeProvider + ThemeMenu) eklendi; 3 palet + light/dark mod arayüz genelinde uygulanabiliyor. Mobil navigasyon paneli ve özelleştirilmiş checkbox/dropdown tasarımları devreye alındı.

@@ -183,7 +183,7 @@ function ControlPanelPage() {
             </div>
             <div className="flex items-center gap-3">
               <ThemeMenu showLabel />
-              <button className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary shadow-panel transition hover:bg-primary/80">
+              <button className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition hover:bg-primary/80">
                 + Yeni Görev Ekle
               </button>
             </div>
@@ -211,7 +211,7 @@ function ControlPanelPage() {
           )}
 
           <div className="space-y-8">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-panel">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleMainCreate}>
                 <input
                   type="text"
@@ -255,7 +255,7 @@ function ControlPanelPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-panel">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-muted">
                 <div className="grid flex-1 gap-3 sm:grid-cols-3">
                   {['Tümü', 'Aktif', 'Tamamlanan'].map((filter, index) => (
@@ -274,9 +274,9 @@ function ControlPanelPage() {
               </div>
               <div className="space-y-4">
                 {todayTasks.map((task) => (
-                  <div
+                  <label
                     key={task.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-border bg-card-deep/80 p-4 md:flex-row md:items-center md:justify-between"
+                    className="group flex flex-col gap-3 rounded-2xl border border-border bg-card-deep/80 p-4 md:flex-row md:items-center md:justify-between"
                   >
                     <div className="flex items-start gap-3">
                       <input
@@ -284,8 +284,11 @@ function ControlPanelPage() {
                         checked={task.completed}
                         onChange={() => handleToggleTask(task)}
                         disabled={pendingIds.has(task.id)}
-                        className="mt-1 h-5 w-5 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
+                        className="peer sr-only"
                       />
+                      <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-md border border-border/70 text-transparent transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-on-primary">
+                        <span className="material-symbols-outlined text-[0.9rem] leading-none">check</span>
+                      </span>
                       <div>
                         <p className={`text-lg font-semibold ${task.completed ? 'text-muted line-through' : ''}`}>
                           {task.title}
@@ -296,13 +299,13 @@ function ControlPanelPage() {
                     <span className="self-start rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold text-muted md:self-center">
                       {task.category ?? 'Genel'}
                     </span>
-                  </div>
+                  </label>
                 ))}
                 {!todayTasks.length && <p className="text-sm text-muted">Bugün için görev bulunamadı.</p>}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-panel">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Yaklaşan Görevler</h2>
                 <button className="text-sm text-primary hover:underline">Tümünü Gör</button>

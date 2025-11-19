@@ -102,7 +102,7 @@ function HomePage() {
 
         <main className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,3.5fr)_2fr]">
           <section className="space-y-8">
-            <div className="space-y-4 rounded-2xl border border-border bg-card p-8 shadow-panel">
+            <div className="space-y-4 rounded-2xl border border-border bg-card/90 p-8">
               <p className="text-sm uppercase tracking-[0.25em] text-primary/90">Merhaba, Kullanıcı!</p>
               <h1 className="text-4xl font-black leading-tight tracking-tight">Alışkanlık takvimimize hoş geldiniz.</h1>
               <p className="max-w-3xl text-base text-muted">
@@ -111,7 +111,7 @@ function HomePage() {
               </p>
             </div>
 
-            <div className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-panel">
+            <div className="space-y-5 rounded-2xl border border-border bg-card/90 p-6">
               <div>
                 <p className="text-sm text-primary/90">2024 Yılındaki Katkıların</p>
                 <h2 className="text-xl font-semibold">Alışkanlık Aktivitesi</h2>
@@ -150,12 +150,12 @@ function HomePage() {
           <aside className="space-y-6">
             <Link
               to="/control-panel"
-              className="flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary shadow-panel transition hover:bg-primary/80"
+              className="flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition hover:bg-primary/80"
             >
               + Yeni Alışkanlık Ekle
             </Link>
 
-            <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-panel">
+            <div className="space-y-4 rounded-2xl border border-border bg-card/90 p-6">
               <h3 className="text-lg font-semibold">İstatistikler</h3>
               <div className="space-y-4">
                 {statsCards.map((item) => (
@@ -167,7 +167,7 @@ function HomePage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-panel">
+            <div className="rounded-2xl border border-border bg-card/90 p-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Bugünün Görevleri</h3>
                 {actionError && <p className="text-xs text-red-300">{actionError}</p>}
@@ -177,7 +177,7 @@ function HomePage() {
                   <label
                     key={task.id}
                     htmlFor={`task-${task.id}`}
-                    className="flex cursor-pointer items-center gap-4 rounded-xl border border-transparent px-3 py-2 transition hover:border-primary/60"
+                    className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border/60 bg-card-deep/40 px-3 py-2 transition hover:border-primary/60"
                   >
                     <input
                       id={`task-${task.id}`}
@@ -185,9 +185,16 @@ function HomePage() {
                       checked={task.completed}
                       onChange={() => handleToggleTask(task)}
                       disabled={pendingIds.has(task.id)}
-                      className="h-5 w-5 rounded-md border-border text-primary focus:ring-primary disabled:opacity-50"
+                      className="peer sr-only"
                     />
-                    <span className={`text-sm font-medium ${task.completed ? 'text-muted line-through' : ''}`}>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-md border border-border/70 bg-transparent text-transparent transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-on-primary">
+                      <span className="material-symbols-outlined text-[0.9rem] leading-none">check</span>
+                    </span>
+                    <span
+                      className={`text-sm font-medium transition ${
+                        task.completed ? 'text-muted line-through' : 'text-foreground'
+                      }`}
+                    >
                       {task.title}
                     </span>
                   </label>

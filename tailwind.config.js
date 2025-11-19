@@ -1,17 +1,30 @@
 import forms from '@tailwindcss/forms';
 
+const withOpacityValue = (variable) => {
+  return ({ opacityValue }) => {
+    if (opacityValue !== undefined) {
+      return `rgba(var(${variable}) / ${opacityValue})`;
+    }
+    return `rgb(var(${variable}) / 1)`;
+  };
+};
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: '#2EAC8A',
-        accent: '#13ECB6',
-        'background-dark': '#051612',
-        'card-dark': '#10221d',
-        'card-deeper': '#0b1c18',
+        primary: withOpacityValue('--color-primary'),
+        accent: withOpacityValue('--color-accent'),
+        background: withOpacityValue('--color-bg'),
+        'background-alt': withOpacityValue('--color-bg-alt'),
+        card: withOpacityValue('--color-card'),
+        'card-deep': withOpacityValue('--color-card-deep'),
+        border: withOpacityValue('--color-border'),
+        foreground: withOpacityValue('--color-foreground'),
+        muted: withOpacityValue('--color-muted'),
+        'on-primary': withOpacityValue('--color-on-primary'),
       },
       fontFamily: {
         display: ['Inter', 'sans-serif'],
@@ -22,7 +35,7 @@ export default {
         '2xl': '1.5rem',
       },
       boxShadow: {
-        panel: '0 20px 40px rgba(0, 0, 0, 0.35)',
+        panel: '0 20px 40px rgba(0, 0, 0, 0.32)',
       },
     },
   },

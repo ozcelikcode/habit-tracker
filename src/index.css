@@ -4,8 +4,18 @@
 
 :root {
   font-family: 'Inter', sans-serif;
-  color: #f8fafc;
-  background-color: #051612;
+  --color-primary: 46 172 138;
+  --color-accent: 19 236 182;
+  --color-bg: 5 22 18;
+  --color-bg-alt: 12 32 26;
+  --color-card: 16 34 29;
+  --color-card-deep: 9 24 21;
+  --color-border: 50 103 90;
+  --color-foreground: 244 250 247;
+  --color-muted: 183 202 196;
+  --color-on-primary: 4 19 15;
+  color: rgb(var(--color-foreground));
+  background-color: rgb(var(--color-bg));
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -14,7 +24,9 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #051612;
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-foreground));
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 #root {
@@ -23,5 +35,5 @@ body {
 
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
 }

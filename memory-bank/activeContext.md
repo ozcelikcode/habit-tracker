@@ -1,21 +1,20 @@
 ## Active Context
 
 ### Current Focus
-- Tam etkileşimli akışlar: alışkanlık oluşturma, görev tamamlama/toggle işlemleri ve gerçek verinin heatmap/todo listesine yansıması.
+- Tam etkileşimli akışların yanında, kullanıcıya temayı tamamen değiştirme imkânı sunmak (birden fazla renk paleti + light/dark mod).
 
 ### Recent Activity
-- Express API genişletildi (`/api/habits`, `/api/habit-entries/toggle`); yeni kayıt ekleme, günlük girişleri oluşturma/silme destekleniyor.
-- Home ve Control Panel sayfalarındaki checkbox'lar API'ye bağlandı; hata/pending durumları gösteriliyor.
-- Control Panel’de ana form + sidebar formu üzerinden yeni alışkanlık ekleme, kategori seçimi ve öneri chip’leri uygulanıyor.
-- Tüm işlemler sonrası data `useDashboardData` üzerinden refetch edilerek heatmap/stats eş zamanlı güncelleniyor.
-- Geliştirme ortamında API ve Vite’in birlikte çalışması için `npm run dev:all` komutu eklendi; proxy hatalarını önlemek adına her iki servis aynı anda ayağa kalkıyor.
+- Express API genişletilerek alışkanlık ekleme ve günlük girişleri toggle etme desteklendi; UI’daki checkbox’lar API’ye bağlı çalışıyor.
+- Control Panel’de ana form + sidebar formu ile yeni alışkanlık ekleme, kategori seçimi ve öneri chip’leri uygulandı.
+- Geliştirme sırasında `npm run dev:all` komutuyla Vite ve Express aynı anda çalıştırılabiliyor (proxy hatası yok).
+- Tema sistemi yeniden kuruldu: CSS değişkenleri üzerinden Tailwind renk token’ları tanımlandı; ThemeProvider + ThemeMenu ile 3 palet ve light/dark modu arasında geçiş yapılabiliyor.
 
 ### Next Steps
-1. Alışkanlık silme/düzenleme, birden fazla tamamlanma (amount) ve geçmiş tarih seçimi gibi gelişmiş CRUD özellikleri.
-2. React Query veya benzeri cache yönetimi ile optimistik güncellemeler (şu an her işlemde refetch).
-3. Görev filtreleri (Tümü/Aktif/Tamamlanan) ve heatmap tarih aralığı için gerçek filtreleme mantığı eklemek.
+1. Alışkanlık silme/düzenleme, miktar girme ve geçmiş tarih işlemleri gibi gelişmiş CRUD özellikleri.
+2. React Query vb. ile optimistik güncellemeler ve caching (şu an her işlemde refetch).
+3. Görev filtreleri (Tümü/Aktif/Tamamlanan) ve heatmap tarih aralığı için gerçek filtreleme mantıkları.
 
 ### Considerations
-- API şu an temel CRUD’larla sınırlı; kimlik doğrulama veya kullanıcı çoklama henüz yok.
-- SQLite dosyası `server/habit-tracker.db` tek kullanıcıya göre seed’leniyor; migration stratejisi ileride gerekiyor.
-- Form doğrulamalarını güçlendirmek (ör. renk seçimi, hedefer) ve UI/UX açısından modal veya toast bildirimleri eklemek planlanmalı.
+- API hâlen tek kullanıcı/kimlik doğrulamasız; ileride auth + migration planlanmalı.
+- Yeni bileşenler eklenirken `text-foreground`, `bg-card`, `border-border` gibi CSS-değişken tabanlı sınıflar kullanılmalı ki tema değişikliğinde bozulma olmasın.
+- Form doğrulamaları ve geri bildirim (toast/modal) akışları eklenerek UX güçlendirilmeli.

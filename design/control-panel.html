@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HabitApp - Görev Listesi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13ecb6",
+            "background-light": "#f6f8f8",
+            "background-dark": "#11221e",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex min-h-screen w-full">
+<!-- SideNavBar -->
+<aside class="flex h-screen flex-col justify-between bg-[#19332d] p-4 w-64 sticky top-0">
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="HabitApp logo with an abstract teal and green pattern" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzbOatAPMACruRxeJodUKiaCYEYzcC1gk4XFmbC5oxAD2B5BIuyXUrlwRVGMYjfOJ8AMunWu6aTfbBd7E-toyqmlPaigESZuCBdel4g8dOXJZg388heWaUYrDWmUl0Qafv3gWR7kWw6Xk1aWRMIUZvEHE3lg9oWEcHSenGbpc_eVu1rcpdcTJUZPlQqw8g8tBE1zhynomvTdKc-aqtCNdjWxJhxdNeRDhzmEg9y2pezCbBRV8mA70C6dr2gzdxzsoKDZnoM8IByFs");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-medium leading-normal">HabitApp</h1>
+<p class="text-[#92c9bb] text-sm font-normal leading-normal">Alışkanlık Takibi</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20" href="#">
+<span class="material-symbols-outlined text-primary">checklist</span>
+<p class="text-primary text-sm font-medium leading-normal">Yapılacaklar</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10" href="#">
+<span class="material-symbols-outlined text-white">pie_chart</span>
+<p class="text-white text-sm font-medium leading-normal">İstatistikler</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10" href="#">
+<span class="material-symbols-outlined text-white">settings</span>
+<p class="text-white text-sm font-medium leading-normal">Ayarlar</p>
+</a>
+</nav>
+<div class="border-t border-[#32675a]"></div>
+<div class="flex flex-col gap-4">
+<h2 class="text-[#92c9bb] text-xs font-bold uppercase tracking-wider px-3">Alışkanlıklarım</h2>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10" href="#">
+<span class="material-symbols-outlined text-white/80 text-xl">self_improvement</span>
+<p class="text-white/80 text-sm font-medium leading-normal">Sabah Rutini</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10" href="#">
+<span class="material-symbols-outlined text-white/80 text-xl">fitness_center</span>
+<p class="text-white/80 text-sm font-medium leading-normal">Spor</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10" href="#">
+<span class="material-symbols-outlined text-white/80 text-xl">auto_stories</span>
+<p class="text-white/80 text-sm font-medium leading-normal">Kitap Okuma</p>
+</a>
+</nav>
+</div>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-[#11221e] text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Yeni Alışkanlık Ekle</span>
+</button>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-8">
+<div class="mx-auto max-w-4xl">
+<!-- PageHeading -->
+<header class="flex flex-wrap justify-between items-center gap-4 mb-6">
+<div class="flex flex-col gap-1">
+<h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em]">Bugünün Görevleri</h1>
+<p class="text-[#92c9bb] text-base font-normal leading-normal">Pazartesi, 22 Temmuz</p>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#23483f] text-white text-sm font-bold leading-normal tracking-[0.015em] gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+<span class="truncate">Yeni Görev Ekle</span>
+</button>
+</header>
+<!-- TextField -->
+<div class="mb-4">
+<div class="flex w-full items-stretch rounded-lg">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#32675a] bg-[#19332d] focus:border-primary h-14 placeholder:text-[#92c9bb] p-[15px] rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal" placeholder="Yeni bir görev ekle..." value=""/>
+<button class="text-white bg-primary hover:bg-primary/90 flex items-center justify-center px-5 rounded-r-lg font-bold">Ekle</button>
+</div>
+</div>
+<!-- Chips / Smart Suggestions -->
+<div class="flex gap-3 mb-8 overflow-x-auto pb-2">
+<p class="text-[#92c9bb] text-sm font-medium self-center shrink-0">Öneriler:</p>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#23483f] px-3 cursor-pointer hover:bg-[#32675a]">
+<span class="material-symbols-outlined text-primary text-base">lightbulb</span>
+<p class="text-white text-sm font-medium leading-normal">15 dakika kitap oku</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#23483f] px-3 cursor-pointer hover:bg-[#32675a]">
+<span class="material-symbols-outlined text-primary text-base">lightbulb</span>
+<p class="text-white text-sm font-medium leading-normal">Sabah meditasyonu yap</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#23483f] px-3 cursor-pointer hover:bg-[#32675a]">
+<span class="material-symbols-outlined text-primary text-base">lightbulb</span>
+<p class="text-white text-sm font-medium leading-normal">Akşam yürüyüşü yap</p>
+</div>
+</div>
+<!-- SegmentedButtons / Filters -->
+<div class="flex h-10 w-full items-center justify-center rounded-lg bg-[#19332d] p-1 mb-6">
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-[#23483f] has-[:checked]:text-white text-[#92c9bb] text-sm font-medium leading-normal transition-colors">
+<span class="truncate">Tümü</span>
+<input class="invisible w-0" name="task-filter" type="radio" value="Tümü"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-[#23483f] has-[:checked]:text-white text-[#92c9bb] text-sm font-medium leading-normal transition-colors">
+<span class="truncate">Aktif</span>
+<input checked="" class="invisible w-0" name="task-filter" type="radio" value="Aktif"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-[#23483f] has-[:checked]:text-white text-[#92c9bb] text-sm font-medium leading-normal transition-colors">
+<span class="truncate">Tamamlanan</span>
+<input class="invisible w-0" name="task-filter" type="radio" value="Tamamlanan"/>
+</label>
+</div>
+<!-- Task List -->
+<div class="flex flex-col gap-3">
+<!-- Task Item 1 -->
+<div class="group flex items-center justify-between p-4 rounded-lg bg-[#19332d] hover:bg-[#23483f] transition-colors">
+<div class="flex items-center gap-4">
+<input class="form-checkbox h-5 w-5 rounded bg-[#11221e] border-[#32675a] text-primary focus:ring-primary focus:ring-offset-0 focus:ring-2" type="checkbox"/>
+<div class="flex flex-col">
+<p class="text-white text-base">20 sayfa kitap oku</p>
+<p class="text-xs text-[#92c9bb]">Bugün</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs font-medium bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full">Kitap Okuma</span>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-white/70 hover:text-white"><span class="material-symbols-outlined text-xl">edit</span></button>
+<button class="text-white/70 hover:text-white"><span class="material-symbols-outlined text-xl">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Task Item 2 -->
+<div class="group flex items-center justify-between p-4 rounded-lg bg-[#19332d] hover:bg-[#23483f] transition-colors">
+<div class="flex items-center gap-4">
+<input class="form-checkbox h-5 w-5 rounded bg-[#11221e] border-[#32675a] text-primary focus:ring-primary focus:ring-offset-0 focus:ring-2" type="checkbox"/>
+<div class="flex flex-col">
+<p class="text-white text-base">Akşam yürüyüşü yap</p>
+<p class="text-xs text-[#92c9bb]">Bugün</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs font-medium bg-orange-900/60 text-orange-300 px-2 py-1 rounded-full">Spor</span>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-white/70 hover:text-white"><span class="material-symbols-outlined text-xl">edit</span></button>
+<button class="text-white/70 hover:text-white"><span class="material-symbols-outlined text-xl">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Task Item 3 (Completed) -->
+<div class="group flex items-center justify-between p-4 rounded-lg bg-[#19332d]/50">
+<div class="flex items-center gap-4">
+<input checked="" class="form-checkbox h-5 w-5 rounded bg-[#11221e] border-[#32675a] text-primary focus:ring-primary focus:ring-offset-0 focus:ring-2" type="checkbox"/>
+<div class="flex flex-col">
+<p class="text-white/50 text-base line-through">10 dakika meditasyon yap</p>
+<p class="text-xs text-[#92c9bb]/50">Bugün</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs font-medium bg-purple-900/40 text-purple-400/60 px-2 py-1 rounded-full line-through">Sabah Rutini</span>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-white/50 hover:text-white"><span class="material-symbols-outlined text-xl">undo</span></button>
+<button class="text-white/50 hover:text-white"><span class="material-symbols-outlined text-xl">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Empty State -->
+<!--
+          <div class="text-center py-16 px-6 rounded-lg bg-[#19332d] border-2 border-dashed border-[#32675a]">
+            <span class="material-symbols-outlined text-5xl text-primary mx-auto">celebration</span>
+            <h3 class="mt-4 text-lg font-medium text-white">Harika bir gün!</h3>
+            <p class="mt-1 text-sm text-[#92c9bb]">İlk görevini ekleyerek başla.</p>
+          </div>
+          -->
+</div>
+</div>
+</main>
+</div>
+</body></html>

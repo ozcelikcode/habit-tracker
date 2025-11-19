@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Pencil, Save, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Menu, Pencil, Save, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ThemeMenu from '../components/ThemeMenu.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
@@ -45,6 +45,7 @@ function ControlPanelPage() {
   const [isTaskDirty, setIsTaskDirty] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editValues, setEditValues] = useState({ title: '', category: CATEGORY_OPTIONS[0], status: 'active' });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const todayTasks = data?.todayTasks ?? [];
 
@@ -190,91 +191,106 @@ function ControlPanelPage() {
     }
   };
 
+  const sidebarInner = (
+    <>
+      <div className="space-y-6">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/20 text-primary">
+            <span className="material-symbols-outlined text-2xl">waterfall_chart</span>
+          </div>
+          <div>
+            <p className="text-lg font-semibold">HabitApp</p>
+            <p className="text-sm text-muted">Alışkanlık Takibi</p>
+          </div>
+        </Link>
+
+        <nav className="space-y-2">
+          {NAV_LINKS.map((item) => (
+            <Link
+              key={item.label}
+              to={item.path}
+              onClick={() => setIsSidebarOpen(false)}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                item.active ? 'bg-primary/20 text-primary' : 'text-muted hover:bg-background-alt/30'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Alışkanlıklarım</p>
+          <div className="space-y-2">
+            {habits.slice(0, 6).map((habit, index) => (
+              <div
+                key={habit.id}
+                className="flex items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-background-alt/30"
+              >
+                <span className="material-symbols-outlined text-lg text-muted">
+                  {HABIT_ICONS[index % HABIT_ICONS.length]}
+                </span>
+                <div>
+                  <p className="font-medium">{habit.name}</p>
+                  <p className="text-xs text-muted">{habit.category}</p>
+                </div>
+              </div>
+            ))}
+            {!habits.length && <p className="text-sm text-muted">Henüz alışkanlık yok.</p>}
+          </div>
+        </div>
+      </div>
+
+      <form className="mt-6 space-y-3 rounded-xl border border-border bg-card p-4" onSubmit={handleSidebarCreate}>
+        <p className="text-sm font-semibold">Yeni Alışkanlık</p>
+        <input
+          type="text"
+          value={sidebarHabitName}
+          onChange={(event) => setSidebarHabitName(event.target.value)}
+          placeholder="Alışkanlık adı"
+          className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+        />
+        <select
+          value={sidebarHabitCategory}
+          onChange={(event) => setSidebarHabitCategory(event.target.value)}
+          className="w-full rounded-lg border border-border bg-card-deep px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+        >
+          {CATEGORY_OPTIONS.map((option) => (
+            <option key={option} value={option} className="bg-background-alt text-foreground">
+              {option}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          disabled={sidebarCreating}
+          className="w-full rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary/80 disabled:opacity-60"
+        >
+          {sidebarCreating ? 'Kaydediliyor...' : 'Yeni Alışkanlık Ekle'}
+        </button>
+      </form>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background font-display text-foreground">
       <div className="flex min-h-screen flex-col lg:flex-row">
         <aside className="hidden w-72 flex-col justify-between border-r border-border bg-card-deep/80 p-6 lg:flex">
-          <div className="space-y-6">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/20 text-primary">
-                <span className="material-symbols-outlined text-2xl">waterfall_chart</span>
-              </div>
-              <div>
-                <p className="text-lg font-semibold">HabitApp</p>
-                <p className="text-sm text-muted">Alışkanlık Takibi</p>
-              </div>
-            </Link>
-
-            <nav className="space-y-2">
-              {NAV_LINKS.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.path}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    item.active ? 'bg-primary/20 text-primary' : 'text-muted hover:bg-background-alt/30'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-base">{item.icon}</span>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Alışkanlıklarım</p>
-              <div className="space-y-2">
-                {habits.slice(0, 6).map((habit, index) => (
-                  <div
-                    key={habit.id}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-foreground transition hover:bg-background-alt/30"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted">
-                      {HABIT_ICONS[index % HABIT_ICONS.length]}
-                    </span>
-                    <div>
-                      <p className="font-medium">{habit.name}</p>
-                      <p className="text-xs text-muted">{habit.category}</p>
-                    </div>
-                  </div>
-                ))}
-                {!habits.length && <p className="text-sm text-muted">Henüz alışkanlık yok.</p>}
-              </div>
-            </div>
-          </div>
-
-          <form className="space-y-3 rounded-xl border border-border bg-card p-4" onSubmit={handleSidebarCreate}>
-            <p className="text-sm font-semibold">Yeni Alışkanlık</p>
-            <input
-              type="text"
-              value={sidebarHabitName}
-              onChange={(event) => setSidebarHabitName(event.target.value)}
-              placeholder="Alışkanlık adı"
-              className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
-            />
-            <select
-              value={sidebarHabitCategory}
-              onChange={(event) => setSidebarHabitCategory(event.target.value)}
-              className="w-full rounded-lg border border-border bg-card-deep px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-            >
-              {CATEGORY_OPTIONS.map((option) => (
-                <option key={option} value={option} className="bg-background-alt text-foreground">
-                  {option}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              disabled={sidebarCreating}
-              className="w-full rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary/80 disabled:opacity-60"
-            >
-              {sidebarCreating ? 'Kaydediliyor...' : 'Yeni Alışkanlık Ekle'}
-            </button>
-          </form>
+          {sidebarInner}
         </aside>
 
         <main className="flex-1 px-4 py-6 sm:px-8 sm:py-10">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
-            <div>
+          <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:border-primary hover:text-primary lg:hidden"
+              aria-label="Menüyü aç"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="flex-1">
               <p className="text-sm uppercase tracking-[0.4em] text-primary/80">Bugünün Görevleri</p>
               <h1 className="text-4xl font-black leading-tight">Pazartesi, 22 Temmuz</h1>
             </div>
@@ -431,11 +447,8 @@ function ControlPanelPage() {
                             checked={task.status === 'done'}
                             onChange={() => handleToggleTask(task)}
                             disabled={pendingIds.has(task.id)}
-                            className="peer sr-only"
+                            className="themed-checkbox mt-1 disabled:opacity-50"
                           />
-                          <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-md border border-border/70 text-transparent transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-on-primary">
-                            <span className="material-symbols-outlined text-[0.9rem] leading-none">check</span>
-                          </span>
                           <div>
                             <p className={`text-lg font-semibold ${task.status === 'done' ? 'text-muted line-through' : ''}`}>
                               {task.title}
@@ -520,6 +533,23 @@ function ControlPanelPage() {
           </div>
         </main>
       </div>
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/70 p-4 lg:hidden">
+          <div className="ml-auto flex h-full max-w-xs flex-col rounded-2xl border border-border bg-card-deep/95 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Menü</h2>
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:border-primary hover:text-primary"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-1">{sidebarInner}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

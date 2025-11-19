@@ -1,3 +1,4 @@
+import { Menu, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeMenu from '../components/ThemeMenu.jsx';
@@ -23,6 +24,7 @@ function HomePage() {
   const [pendingIds, setPendingIds] = useState(new Set());
   const [actionError, setActionError] = useState(null);
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, label: '' });
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const heatmapRef = useRef(null);
 
   const statsCards = [
@@ -76,9 +78,9 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-background font-display text-foreground transition-colors">
-      <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
-          <div className="flex items-center gap-3">
+      <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div className="flex items-center gap-3 pr-12">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5">
                 <path
@@ -92,14 +94,43 @@ function HomePage() {
               <p className="text-sm text-muted">Alışkanlık Takvimi</p>
             </div>
           </div>
-          <nav className="flex flex-1 justify-end gap-6 text-sm font-medium text-muted">
-            {NAV_LINKS.map((link) => (
-              <Link key={link.label} to={link.path} className="transition-colors hover:text-primary">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <ThemeMenu />
+          <div className="hidden flex-1 items-center justify-end gap-4 md:flex">
+            <nav className="flex gap-6 text-sm font-medium text-muted">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.label} to={link.path} className="transition-colors hover:text-primary">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <ThemeMenu />
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsNavOpen((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:border-primary hover:text-primary md:hidden"
+            aria-label="Mobil menüyü aç"
+          >
+            {isNavOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+          {isNavOpen && (
+            <div className="mt-3 w-full rounded-xl border border-border bg-card p-4 md:hidden">
+              <nav className="flex flex-col gap-2 text-sm font-medium text-muted">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.path}
+                    onClick={() => setIsNavOpen(false)}
+                    className="rounded-lg px-3 py-2 transition hover:bg-background-alt/40 hover:text-primary"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-3">
+                <ThemeMenu />
+              </div>
+            </div>
+          )}
         </header>
 
         {statusMessage && (
@@ -117,7 +148,7 @@ function HomePage() {
           </div>
         )}
 
-        <main className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,3.5fr)_2fr]">
+        <main className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,3.5fr)_2fr]">
           <section className="space-y-8">
             <div className="space-y-4 rounded-2xl border border-border bg-card/90 p-8">
               <p className="text-sm uppercase tracking-[0.25em] text-primary/90">Merhaba, Kullanıcı!</p>
@@ -164,7 +195,11 @@ function HomePage() {
                 {tooltip.visible && (
                   <div
                     className="pointer-events-none absolute rounded-lg border border-border bg-card px-3 py-1 text-xs text-foreground/80"
-                    style={{ left: tooltip.x, top: tooltip.y }}
+                    style={{
+                      left: `${tooltip.x}px`,
+                      top: `${tooltip.y}px`,
+                      transform: 'translate(-50%, -100%)',
+                    }}
                   >
                     {tooltip.label}
                   </div>

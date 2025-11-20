@@ -43,3 +43,12 @@ export async function toggleHabitEntry(payload) {
   });
   return handleResponse(response);
 }
+
+export async function updateHabit(habitId, payload) {
+  const response = await fetch(`/api/habits/${habitId}`, {
+    method: 'PUT',
+    headers: JSON_HEADERS,
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
+}

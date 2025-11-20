@@ -27,7 +27,11 @@ export function buildDashboardPayload(db) {
 function fetchHabits(db) {
   return db
     .prepare(
-      'SELECT id, name, category, color, target_per_day as targetPerDay FROM habits WHERE is_archived = 0 ORDER BY sort_order, id'
+      `SELECT id, name, category, color, target_per_day as targetPerDay,
+              preferred_date as preferredDate, preferred_time as preferredTime
+       FROM habits
+       WHERE is_archived = 0
+       ORDER BY sort_order, id`
     )
     .all();
 }
@@ -45,14 +49,19 @@ function buildTodayTasks(db, habits) {
     .all(todayKey);
   const entryMap = new Map(entries.map((entry) => [entry.habitId, entry.total]));
 
-  return habits.slice(0, TODAY_TASK_LIMIT).map((habit) => ({
-    id: habit.id,
-    title: habit.name,
-    category: habit.category,
-    color: habit.color,
-    date: todayKey,
-    completed: entryMap.has(habit.id),
-  }));
+  return habits.slice(0, TODAY_TASK_LIMIT).map((habit) => {
+    const scheduledDate = habit.preferredDate || todayKey;
+    return {
+      id: habit.id,
+      title: habit.name,
+      category: habit.category,
+      color: habit.color,
+      date: todayKey,
+      scheduledDate,
+      scheduledTime: habit.preferredTime || '',
+      completed: entryMap.has(habit.id),
+    };
+  });
 }
 
 function buildUpcomingTasks(habits) {

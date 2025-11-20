@@ -19,6 +19,7 @@ export function initializeDatabase() {
   const db = new Database(DB_PATH);
   db.pragma('journal_mode = WAL');
   createTables(db);
+  ensureHabitColumns(db);
   seedIfNeeded(db);
   return db;
 }
@@ -39,6 +40,8 @@ function createTables(db) {
       color TEXT,
       target_per_day INTEGER DEFAULT 1,
       is_archived INTEGER DEFAULT 0,
+      preferred_date TEXT,
+      preferred_time TEXT,
       sort_order INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
@@ -56,6 +59,18 @@ function createTables(db) {
     CREATE INDEX IF NOT EXISTS idx_habit_entries_date ON habit_entries(date);
     CREATE INDEX IF NOT EXISTS idx_habit_entries_habit_date ON habit_entries(habit_id, date);
   `);
+}
+
+function ensureHabitColumns(db) {
+  const columns = db.prepare('PRAGMA table_info(habits)').all();
+  const has = (name) => columns.some((col) => col.name === name);
+  const addColumn = (name, definition) => {
+    if (!has(name)) {
+      db.prepare(`ALTER TABLE habits ADD COLUMN ${name} ${definition}`).run();
+    }
+  };
+  addColumn('preferred_date', 'TEXT');
+  addColumn('preferred_time', 'TEXT');
 }
 
 function seedIfNeeded(db) {

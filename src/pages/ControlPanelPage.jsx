@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Menu, Pencil, Save, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Menu, Pencil, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SettingsView from '../components/SettingsView.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import ThemeMenu from '../components/ThemeMenu.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
 import { useServerTime } from '../hooks/useServerTime.js';
-import { createHabit, deleteHabit, toggleHabitEntry } from '../lib/api.js';
+import { createHabit, deleteHabit, toggleHabitEntry, updateHabit } from '../lib/api.js';
 import {
   archiveDeletedTask,
   getDeletedTaskIds,
@@ -45,6 +46,10 @@ function ControlPanelPage() {
   const [actionError, setActionError] = useState(null);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskCategory, setNewTaskCategory] = useState(CATEGORY_OPTIONS[0]);
+  const [newTaskDate, setNewTaskDate] = useState('');
+  const [newTaskTime, setNewTaskTime] = useState('');
+  const [formMode, setFormMode] = useState('create'); // create | edit
+  const [editingId, setEditingId] = useState(null);
   const [sidebarHabitName, setSidebarHabitName] = useState('');
   const [sidebarHabitCategory, setSidebarHabitCategory] = useState(CATEGORY_OPTIONS[0]);
   const [creating, setCreating] = useState(false);
@@ -53,12 +58,9 @@ function ControlPanelPage() {
   const [taskFilter, setTaskFilter] = useState('all');
   const [tasks, setTasks] = useState([]);
   const [isTaskDirty, setIsTaskDirty] = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState(null);
-  const [editValues, setEditValues] = useState({ title: '', category: CATEGORY_OPTIONS[0], status: 'active' });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [deletedTaskIds, setDeletedTaskIds] = useState(() => getDeletedTaskIds());
-  const [toast, setToast] = useState(null);
-  const toastTimerRef = useRef(null);
+  const { showToast } = useToast();
   const serverNow = useServerTime();
   const dateLabel = serverNow
     ? serverNow.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -75,12 +77,10 @@ function ControlPanelPage() {
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-    };
-  }, []);
+    if (!newTaskDate && serverNow) {
+      setNewTaskDate(serverNow.toISOString().slice(0, 10));
+    }
+  }, [serverNow, newTaskDate]);
 
   const deletedTaskIdSet = useMemo(() => new Set(deletedTaskIds), [deletedTaskIds]);
 
@@ -98,6 +98,8 @@ function ControlPanelPage() {
         title: task.title,
         category: task.category ?? 'Genel',
         date: task.date,
+        scheduledDate: task.scheduledDate,
+        scheduledTime: task.scheduledTime,
         status: task.completed ? 'done' : 'active',
       }));
     setTasks(mapped);
@@ -166,11 +168,11 @@ function ControlPanelPage() {
         await refetch();
       }
       setIsTaskDirty(false);
-      showToast('Görev Silinenlere Taşındı');
+      showToast('Görev silinenlere taşındı');
     } catch (err) {
       setTasks(previousTasks);
       restoreDeletedTask(taskId);
-      setActionError(err.message || 'Görev Silinemedi!');
+      setActionError(err.message || 'Görev silinemedi');
       setIsTaskDirty(false);
     } finally {
       togglePending(taskId, false);
@@ -192,88 +194,97 @@ function ControlPanelPage() {
     setIsTaskDirty(true);
   };
 
-  const startEditingTask = (task) => {
-    setEditingTaskId(task.id);
-    setEditValues({ title: task.title, category: task.category, status: task.status });
-  };
-
-  const handleEditChange = (field, value) => {
-    setEditValues((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveEdit = () => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === editingTaskId
-          ? { ...task, title: editValues.title, category: editValues.category, status: editValues.status }
-          : task
-      )
-    );
-    setEditingTaskId(null);
-    setIsTaskDirty(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTaskId(null);
-  };
-
-  const showToast = (message) => {
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
-    setToast({ message });
-    toastTimerRef.current = setTimeout(() => setToast(null), 3200);
-  };
-
-  const submitHabit = async ({ name, category }, setStateFn) => {
+  const submitHabit = async ({ id, name, category, date, time }, setStateFn) => {
     const trimmedName = (name ?? '').toString().trim();
     const safeCategory = (category ?? CATEGORY_OPTIONS[0]).toString().trim() || CATEGORY_OPTIONS[0];
+    const payload = {
+      name: trimmedName,
+      category: safeCategory,
+      preferredDate: date || null,
+      preferredTime: time || null,
+    };
 
     if (!trimmedName) {
-      setActionError('Lutfen bir baslik yazin');
+      setActionError('Lütfen bir başlık yazın');
       return false;
     }
     try {
       setActionError(null);
       setStateFn(true);
-      const response = await createHabit({
-        name: trimmedName,
-        category: safeCategory,
-      });
+      const response =
+        formMode === 'edit' && id
+          ? await updateHabit(id, payload)
+          : await createHabit(payload);
+
       if (response?.dashboard) {
         setData(response.dashboard);
       } else {
         await refetch();
       }
       setIsTaskDirty(false);
+      showToast(formMode === 'edit' ? 'Görev güncellendi' : 'Görev eklendi');
       return true;
     } catch (err) {
-      setActionError(err.message || 'Kayit sirasinda hata olustu');
+      setActionError(err.message || 'Kayıt sırasında hata oluştu');
       return false;
     } finally {
       setStateFn(false);
     }
   };
 
+  const resetForm = () => {
+    setFormMode('create');
+    setEditingId(null);
+    setNewTaskName('');
+    setNewTaskCategory(CATEGORY_OPTIONS[0]);
+    setNewTaskDate(serverNow ? serverNow.toISOString().slice(0, 10) : '');
+    setNewTaskTime('');
+  };
+
   const handleMainCreate = async (event) => {
     event.preventDefault();
-    const success = await submitHabit({ name: newTaskName, category: newTaskCategory }, setCreating);
+    const success = await submitHabit(
+      {
+        id: formMode === 'edit' ? editingId : undefined,
+        name: newTaskName,
+        category: newTaskCategory,
+        date: newTaskDate,
+        time: newTaskTime,
+      },
+      setCreating
+    );
     if (success) {
-      setNewTaskName('');
-      setNewTaskCategory(CATEGORY_OPTIONS[0]);
+      resetForm();
     }
   };
 
   const handleSidebarCreate = async (event) => {
     event.preventDefault();
     const success = await submitHabit(
-      { name: sidebarHabitName, category: sidebarHabitCategory },
+      {
+        id: formMode === 'edit' ? editingId : undefined,
+        name: sidebarHabitName,
+        category: sidebarHabitCategory,
+        date: newTaskDate,
+        time: newTaskTime,
+      },
       setSidebarCreating
     );
     if (success) {
+      resetForm();
       setSidebarHabitName('');
       setSidebarHabitCategory(CATEGORY_OPTIONS[0]);
     }
+  };
+
+  const startEditFromList = (task) => {
+    setFormMode('edit');
+    setEditingId(task.id);
+    setNewTaskName(task.title);
+    setNewTaskCategory(task.category ?? CATEGORY_OPTIONS[0]);
+    setNewTaskDate(task.scheduledDate || task.date || (serverNow ? serverNow.toISOString().slice(0, 10) : ''));
+    setNewTaskTime(task.scheduledTime || '');
+    showToast('Düzenleme moduna geçildi');
   };
 
   const sidebarInner = (
@@ -377,13 +388,6 @@ function ControlPanelPage() {
 
   return (
     <div className="min-h-screen bg-background font-display text-foreground">
-      {toast && (
-        <div className="fixed right-4 top-4 z-50 animate-in fade-in slide-in-from-right-4">
-          <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm shadow-lg shadow-black/20">
-            {toast.message}
-          </div>
-        </div>
-      )}
       <div className="flex min-h-screen flex-col lg:flex-row">
         <aside className="hidden w-72 flex-col justify-between border-r border-border bg-card-deep/80 p-6 lg:flex">
           {sidebarInner}
@@ -451,179 +455,58 @@ function ControlPanelPage() {
           )}
 
           {activeView === 'settings' ? (
-            <SettingsView
-              data={data}
-              onClearData={async () => {
-                if (!window.confirm('Tüm verileriniz silinecek. Emin misiniz?')) return;
-                try {
-                  await fetch('/api/reset', { method: 'POST' });
-                  window.location.reload();
-                } catch (e) {
-                  alert('Sıfırlama başarısız oldu');
-                }
-              }}
-            />
+            <SettingsView data={data} notify={showToast} />
           ) : (
-            <div className="space-y-8">
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleMainCreate}>
-                  <input
-                    type="text"
-                    value={newTaskName}
-                    onChange={(event) => setNewTaskName(event.target.value)}
-                    placeholder="Yeni bir görev ekle..."
-                    className="flex-1 rounded-xl border border-border bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-0"
-                  />
-                  <select
-                    value={newTaskCategory}
-                    onChange={(event) => setNewTaskCategory(event.target.value)}
-                    className="rounded-xl border border-border bg-card-deep px-3 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
-                  >
-                    {CATEGORY_OPTIONS.map((option) => (
-                      <option key={option} value={option} className="bg-background-alt text-foreground">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-on-primary transition hover:bg-accent/80 disabled:opacity-60"
-                  >
-                    {creating ? 'Ekleniyor...' : 'Ekle'}
-                  </button>
-                </form>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => setNewTaskName(suggestion)}
-                      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-muted transition hover:border-primary hover:text-foreground"
-                    >
-                      <span className="material-symbols-outlined text-base">lightbulb</span>
-                      {suggestion}
-                    </button>
-                  ))}
-                  {!suggestions.length && <p className="text-sm text-muted">Henüz öneri yok.</p>}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="mb-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
+            <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+              <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
                   <div className="grid flex-1 gap-3 sm:grid-cols-3">
                     {FILTER_OPTIONS.map((filter) => (
                       <button
                         key={filter.value}
                         type="button"
                         onClick={() => setTaskFilter(filter.value)}
-                        className={`rounded-xl px-4 py-2 transition ${taskFilter === filter.value
-                            ? 'bg-primary/20 text-primary'
-                            : 'bg-foreground/5 hover:text-foreground'
-                          }`}
+                        className={`rounded-xl px-4 py-2 transition ${
+                          taskFilter === filter.value ? 'bg-primary/20 text-primary' : 'bg-foreground/5 hover:text-foreground'
+                        }`}
                       >
                         {filter.label}
                       </button>
                     ))}
                   </div>
+                  <span className="text-xs text-muted">Toplam {filteredTasks.length} görev</span>
                 </div>
+
                 <div className="space-y-4">
                   {filteredTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="group flex flex-col gap-3 rounded-2xl border border-border bg-card-deep/80 p-4"
+                      className="group rounded-2xl border border-border bg-card-deep/80 p-4 transition hover:border-primary/60"
                     >
-                      {editingTaskId === task.id ? (
-                        <div className="space-y-3">
-                          <input
-                            type="text"
-                            value={editValues.title}
-                            onChange={(event) => handleEditChange('title', event.target.value)}
-                            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
-                            placeholder="Görev adı"
-                          />
-                          <div className="flex flex-col gap-3 sm:flex-row">
-                            <input
-                              type="text"
-                              value={editValues.category}
-                              onChange={(event) => handleEditChange('category', event.target.value)}
-                              className="flex-1 rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
-                              placeholder="Kategori"
-                            />
-                            <select
-                              value={editValues.status}
-                              onChange={(event) => handleEditChange('status', event.target.value)}
-                              className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                            >
-                              {STATUS_FLOW.map((status) => (
-                                <option key={status} value={status} className="bg-background-alt text-foreground">
-                                  {STATUS_LABELS[status]}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={handleSaveEdit}
-                              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary/80"
-                            >
-                              <Save size={14} /> Kaydet
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleCancelEdit}
-                              className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-muted transition hover:border-primary hover:text-foreground"
-                            >
-                              <X size={14} /> Vazgeç
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              checked={task.status === 'done'}
-                              onChange={() => handleToggleTask(task)}
-                              disabled={pendingIds.has(task.id)}
-                              className="themed-checkbox mt-1 disabled:opacity-50"
-                            />
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={task.status === 'done'}
+                          onChange={() => handleToggleTask(task)}
+                          disabled={pendingIds.has(task.id)}
+                          className="themed-checkbox mt-1 disabled:opacity-50"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className={`text-lg font-semibold ${task.status === 'done' ? 'text-muted line-through' : ''}`}>
+                              <p
+                                className={`text-lg font-semibold ${
+                                  task.status === 'done' ? 'text-muted line-through' : 'text-foreground'
+                                }`}
+                              >
                                 {task.title}
                               </p>
                               <p className="text-sm text-muted">{task.category ?? 'Genel'}</p>
                             </div>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3">
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleMoveTask(task.id, -1)}
-                                disabled={task.status === STATUS_FLOW[0]}
-                                className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground disabled:opacity-40"
-                                aria-label="Sola taşı"
-                              >
-                                <ArrowLeft size={14} />
-                              </button>
-                              <span className="rounded-full border border-border/60 px-2 py-1 text-xs font-semibold text-muted">
-                                {STATUS_LABELS[task.status]}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleMoveTask(task.id, 1)}
-                                disabled={task.status === STATUS_FLOW[STATUS_FLOW.length - 1]}
-                                className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground disabled:opacity-40"
-                                aria-label="Sağa taşı"
-                              >
-                                <ArrowRight size={14} />
-                              </button>
-                            </div>
-                            <div className="ml-auto flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => startEditingTask(task)}
+                                onClick={() => startEditFromList(task)}
                                 className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground"
                                 aria-label="Görevi düzenle"
                               >
@@ -639,37 +522,132 @@ function ControlPanelPage() {
                               </button>
                             </div>
                           </div>
-                        </>
-                      )}
+                          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-1">
+                              <Calendar size={12} /> {task.scheduledDate || 'Tarih seçilmedi'}
+                            </span>
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-1">
+                              <Clock size={12} /> {task.scheduledTime || 'Saat seçilmedi'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveTask(task.id, -1)}
+                            disabled={task.status === STATUS_FLOW[0]}
+                            className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground disabled:opacity-40"
+                            aria-label="Sola taşı"
+                          >
+                            <ArrowLeft size={14} />
+                          </button>
+                          <span className="rounded-full border border-border/60 px-2 py-1 text-xs font-semibold text-muted">
+                            {STATUS_LABELS[task.status]}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveTask(task.id, 1)}
+                            disabled={task.status === STATUS_FLOW[STATUS_FLOW.length - 1]}
+                            className="rounded-full border border-border/70 p-1 text-muted transition hover:border-primary hover:text-foreground disabled:opacity-40"
+                            aria-label="Sağa taşı"
+                          >
+                            <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                   {!filteredTasks.length && <p className="text-sm text-muted">Bugün için görev bulunamadı.</p>}
                 </div>
-              </div>
+              </section>
 
-              <div className="rounded-2xl border border-border bg-card p-5">
+              <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Yaklaşan Görevler</h2>
-                  <button className="text-sm text-primary hover:underline">Tümünü Gör</button>
-                </div>
-                <div className="mt-5 space-y-3">
-                  {upcoming.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex flex-col gap-2 rounded-xl border border-border/60 bg-background-alt/70 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  <div>
+                    <p className="text-sm text-primary/80">{formMode === 'edit' ? 'Görev Düzenle' : 'Yeni Görev'}</p>
+                    <h2 className="text-xl font-semibold">
+                      {formMode === 'edit' ? 'Seçili görevi güncelle' : 'Görev ekle'}
+                    </h2>
+                  </div>
+                  {formMode === 'edit' && (
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
                     >
-                      <div>
-                        <p className="text-base font-semibold">{item.title}</p>
-                        <p className="text-sm text-muted">{item.dueDate}</p>
-                      </div>
-                      <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold text-muted">
-                        {item.category ?? 'Genel'}
-                      </span>
-                    </div>
-                  ))}
-                  {!upcoming.length && <p className="text-sm text-muted">Yaklaşan görev bulunmuyor.</p>}
+                      Yeni Görev
+                    </button>
+                  )}
                 </div>
-              </div>
+
+                <form className="space-y-3" onSubmit={handleMainCreate}>
+                  <input
+                    type="text"
+                    value={newTaskName}
+                    onChange={(event) => setNewTaskName(event.target.value)}
+                    placeholder="Görev başlığı"
+                    className="w-full rounded-xl border border-border bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <select
+                      value={newTaskCategory}
+                      onChange={(event) => setNewTaskCategory(event.target.value)}
+                      className="w-full rounded-xl border border-border bg-card-deep px-3 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
+                    >
+                      {CATEGORY_OPTIONS.map((option) => (
+                        <option key={option} value={option} className="bg-background-alt text-foreground">
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="flex items-center gap-2 rounded-xl border border-border bg-card-deep px-3 py-2">
+                        <Calendar size={16} className="text-muted" />
+                        <input
+                          type="date"
+                          value={newTaskDate}
+                          onChange={(event) => setNewTaskDate(event.target.value)}
+                          className="w-full bg-transparent text-sm focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl border border-border bg-card-deep px-3 py-2">
+                        <Clock size={16} className="text-muted" />
+                        <input
+                          type="time"
+                          value={newTaskTime}
+                          onChange={(event) => setNewTaskTime(event.target.value)}
+                          className="w-full bg-transparent text-sm focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-on-primary transition hover:bg-accent/80 disabled:opacity-60"
+                  >
+                    {creating ? 'Kaydediliyor...' : formMode === 'edit' ? 'Güncelle' : 'Ekle'}
+                  </button>
+                </form>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setNewTaskName(suggestion)}
+                      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-muted transition hover:border-primary hover:text-foreground"
+                    >
+                      <span className="material-symbols-outlined text-base">lightbulb</span>
+                      {suggestion}
+                    </button>
+                  ))}
+                  {!suggestions.length && <p className="text-sm text-muted">Henüz öneri yok.</p>}
+                </div>
+              </section>
             </div>
           )}
         </main>

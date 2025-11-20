@@ -2,6 +2,7 @@ import { Menu, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeMenu from '../components/ThemeMenu.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import { restoreHabit } from '../lib/api.js';
 import {
   clearDeletedTasks,
@@ -23,6 +24,7 @@ function DeletedTasksPage() {
   const [actionError, setActionError] = useState(null);
   const [pendingId, setPendingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const unsubscribe = subscribeToDeletedTasks(setDeletedTasks);
@@ -37,6 +39,7 @@ function DeletedTasksPage() {
     try {
       await restoreHabit(taskId);
       restoreDeletedTask(taskId);
+      showToast('Görev geri alındı');
     } catch (err) {
       setActionError(err.message || 'Geri alma başarısız oldu');
     } finally {
@@ -47,11 +50,13 @@ function DeletedTasksPage() {
   const handlePermanentDelete = (taskId) => {
     setActionError(null);
     permanentlyDeleteTask(taskId);
+    showToast('Görev kalıcı olarak silindi');
   };
 
   const handleBulkDelete = () => {
     setActionError(null);
     clearDeletedTasks();
+    showToast('Arşiv boşaltıldı');
   };
 
   const sidebar = (

@@ -24,14 +24,18 @@ app.get('/api/dashboard', (req, res) => {
 app.get('/api/habits', (req, res) => {
   const habits = db
     .prepare(
-      'SELECT id, name, category, color, target_per_day as targetPerDay, sort_order as sortOrder FROM habits WHERE is_archived = 0 ORDER BY sort_order, id'
+      `SELECT id, name, category, color, target_per_day as targetPerDay, sort_order as sortOrder,
+              preferred_date as preferredDate, preferred_time as preferredTime
+       FROM habits
+       WHERE is_archived = 0
+       ORDER BY sort_order, id`
     )
     .all();
   res.json(habits);
 });
 
 app.post('/api/habits', (req, res) => {
-  const { name, category = 'Genel', color, targetPerDay = 1 } = req.body || {};
+  const { name, category = 'Genel', color, targetPerDay = 1, preferredDate = null, preferredTime = null } = req.body || {};
   if (!name || !String(name).trim()) {
     res.status(400).json({ error: 'Isim gereklidir' });
     return;
@@ -42,15 +46,49 @@ app.post('/api/habits', (req, res) => {
   const finalColor = color || COLOR_PRESETS[Math.floor(Math.random() * COLOR_PRESETS.length)];
 
   const result = db
-    .prepare('INSERT INTO habits (name, category, color, target_per_day, sort_order) VALUES (?, ?, ?, ?, ?)')
-    .run(name.trim(), safeCategory, finalColor, targetPerDay, nextSortOrder);
+    .prepare(
+      'INSERT INTO habits (name, category, color, target_per_day, sort_order, preferred_date, preferred_time) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    )
+    .run(name.trim(), safeCategory, finalColor, targetPerDay, nextSortOrder, preferredDate, preferredTime);
 
   const habit = db
-    .prepare('SELECT id, name, category, color, target_per_day as targetPerDay, sort_order as sortOrder FROM habits WHERE id = ?')
+    .prepare(
+      'SELECT id, name, category, color, target_per_day as targetPerDay, sort_order as sortOrder, preferred_date as preferredDate, preferred_time as preferredTime FROM habits WHERE id = ?'
+    )
     .get(result.lastInsertRowid);
 
   const dashboard = buildDashboardPayload(db);
   res.status(201).json({ habit, dashboard });
+});
+
+app.put('/api/habits/:id', (req, res) => {
+  const habitId = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(habitId)) {
+    res.status(400).json({ error: 'Gecersiz habit id' });
+    return;
+  }
+  const { name, category = 'Genel', preferredDate = null, preferredTime = null } = req.body || {};
+  if (!name || !String(name).trim()) {
+    res.status(400).json({ error: 'Isim gereklidir' });
+    return;
+  }
+  const habit = db.prepare('SELECT id FROM habits WHERE id = ? AND is_archived = 0').get(habitId);
+  if (!habit) {
+    res.status(404).json({ error: 'Aliskanlik bulunamadi' });
+    return;
+  }
+  const safeCategory = (category ?? 'Genel').toString().trim() || 'Genel';
+  db.prepare(
+    'UPDATE habits SET name = ?, category = ?, preferred_date = ?, preferred_time = ? WHERE id = ?'
+  ).run(name.trim(), safeCategory, preferredDate, preferredTime, habitId);
+
+  const dashboard = buildDashboardPayload(db);
+  const updated = db
+    .prepare(
+      'SELECT id, name, category, color, target_per_day as targetPerDay, sort_order as sortOrder, preferred_date as preferredDate, preferred_time as preferredTime FROM habits WHERE id = ?'
+    )
+    .get(habitId);
+  res.json({ habit: updated, dashboard });
 });
 
 app.delete('/api/habits/:id', (req, res) => {
@@ -125,6 +163,12 @@ app.post('/api/reset', (req, res) => {
   db.prepare('DELETE FROM habits').run();
   const dashboard = buildDashboardPayload(db);
   res.json({ status: 'reset', dashboard });
+});
+
+app.post('/api/reset-entries', (req, res) => {
+  db.prepare('DELETE FROM habit_entries').run();
+  const dashboard = buildDashboardPayload(db);
+  res.json({ status: 'reset_entries', dashboard });
 });
 
 app.listen(PORT, () => {

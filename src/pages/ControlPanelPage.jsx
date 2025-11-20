@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Menu, Pencil, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, ChevronDown, Clock, Menu, Pencil, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SettingsView from '../components/SettingsView.jsx';
+import StatsPanel from '../components/StatsPanel.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
 import ThemeMenu from '../components/ThemeMenu.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
@@ -16,7 +17,7 @@ import {
 
 const NAV_LINKS = [
   { icon: 'checklist', label: 'Yapılacaklar', id: 'tasks' },
-  { icon: 'pie_chart', label: 'İstatistikler', id: 'stats' },
+  { icon: 'pie_chart', label: 'İstatistikler', path: '' },
   { icon: 'settings', label: 'Ayarlar', id: 'settings' },
   { icon: 'delete', label: 'Silinenler', path: '/deleted' },
 ];
@@ -35,7 +36,7 @@ const FILTER_OPTIONS = [
   { value: 'done', label: 'Tamamlanan' },
 ];
 
-function ControlPanelPage() {
+function ControlPanelPage({ initialView = 'tasks' }) {
   const { data, loading, error, refetch, setData } = useDashboardData();
   const habits = data?.habits ?? [];
   const suggestions = data?.suggestions ?? [];
@@ -54,7 +55,7 @@ function ControlPanelPage() {
   const [sidebarHabitCategory, setSidebarHabitCategory] = useState(CATEGORY_OPTIONS[0]);
   const [creating, setCreating] = useState(false);
   const [sidebarCreating, setSidebarCreating] = useState(false);
-  const [activeView, setActiveView] = useState('tasks');
+  const [activeView, setActiveView] = useState(initialView);
   const [taskFilter, setTaskFilter] = useState('all');
   const [tasks, setTasks] = useState([]);
   const [isTaskDirty, setIsTaskDirty] = useState(false);
@@ -364,17 +365,20 @@ function ControlPanelPage() {
           placeholder="Alışkanlık adı"
           className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
         />
-        <select
-          value={sidebarHabitCategory}
-          onChange={(event) => setSidebarHabitCategory(event.target.value)}
-          className="w-full rounded-lg border border-border bg-card-deep px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-        >
-          {CATEGORY_OPTIONS.map((option) => (
-            <option key={option} value={option} className="bg-background-alt text-foreground">
-              {option}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={sidebarHabitCategory}
+            onChange={(event) => setSidebarHabitCategory(event.target.value)}
+            className="themed-select"
+          >
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option} value={option} className="bg-background-alt text-foreground">
+                {option}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted" size={16} />
+        </div>
         <button
           type="submit"
           disabled={sidebarCreating}
@@ -456,6 +460,8 @@ function ControlPanelPage() {
 
           {activeView === 'settings' ? (
             <SettingsView data={data} notify={showToast} />
+          ) : activeView === 'stats' ? (
+            <StatsPanel data={data} />
           ) : (
             <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
               <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
@@ -592,17 +598,20 @@ function ControlPanelPage() {
                     className="w-full rounded-xl border border-border bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
                   />
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <select
-                      value={newTaskCategory}
-                      onChange={(event) => setNewTaskCategory(event.target.value)}
-                      className="w-full rounded-xl border border-border bg-card-deep px-3 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
-                    >
-                      {CATEGORY_OPTIONS.map((option) => (
-                        <option key={option} value={option} className="bg-background-alt text-foreground">
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={newTaskCategory}
+                        onChange={(event) => setNewTaskCategory(event.target.value)}
+                        className="themed-select"
+                      >
+                        {CATEGORY_OPTIONS.map((option) => (
+                          <option key={option} value={option} className="bg-background-alt text-foreground">
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="flex items-center gap-2 rounded-xl border border-border bg-card-deep px-3 py-2">
                         <Calendar size={16} className="text-muted" />
@@ -610,7 +619,7 @@ function ControlPanelPage() {
                           type="date"
                           value={newTaskDate}
                           onChange={(event) => setNewTaskDate(event.target.value)}
-                          className="w-full bg-transparent text-sm focus:outline-none"
+                          className="themed-input-ghost"
                         />
                       </div>
                       <div className="flex items-center gap-2 rounded-xl border border-border bg-card-deep px-3 py-2">
@@ -619,7 +628,7 @@ function ControlPanelPage() {
                           type="time"
                           value={newTaskTime}
                           onChange={(event) => setNewTaskTime(event.target.value)}
-                          className="w-full bg-transparent text-sm focus:outline-none"
+                          className="themed-input-ghost"
                         />
                       </div>
                     </div>

@@ -8,8 +8,8 @@ import { getDeletedTaskIds, subscribeToDeletedTasks } from '../lib/deletedTasks.
 
 const NAV_LINKS = [
   { label: 'Kontrol Paneli', path: '/control-panel' },
-  { label: 'Alışkanlıklarım', path: '#habits' },
-  { label: 'Ayarlar', path: '#settings' },
+  { label: 'İstatistikler', path: '/stats' },
+  { label: 'Silinenler', path: '/deleted' },
 ];
 
 const MONTH_FALLBACK = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem'];

@@ -14,7 +14,7 @@ import {
 
 const NAV_LINKS = [
   { icon: 'checklist', label: 'Yapılacaklar', path: '/control-panel' },
-  { icon: 'pie_chart', label: 'İstatistikler', path: '/control-panel#stats' },
+  { icon: 'pie_chart', label: 'İstatistikler', path: '/stats' },
   { icon: 'settings', label: 'Ayarlar', path: '/control-panel#settings' },
   { icon: 'delete', label: 'Silinenler', path: '/deleted' },
 ];

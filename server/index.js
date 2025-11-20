@@ -32,17 +32,18 @@ app.get('/api/habits', (req, res) => {
 
 app.post('/api/habits', (req, res) => {
   const { name, category = 'Genel', color, targetPerDay = 1 } = req.body || {};
-  if (!name || !name.trim()) {
-    res.status(400).json({ error: 'İsim gereklidir' });
+  if (!name || !String(name).trim()) {
+    res.status(400).json({ error: 'Isim gereklidir' });
     return;
   }
 
+  const safeCategory = (category ?? 'Genel').toString().trim() || 'Genel';
   const nextSortOrder = db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM habits').get().next;
   const finalColor = color || COLOR_PRESETS[Math.floor(Math.random() * COLOR_PRESETS.length)];
 
   const result = db
     .prepare('INSERT INTO habits (name, category, color, target_per_day, sort_order) VALUES (?, ?, ?, ?, ?)')
-    .run(name.trim(), category.trim(), finalColor, targetPerDay, nextSortOrder);
+    .run(name.trim(), safeCategory, finalColor, targetPerDay, nextSortOrder);
 
   const habit = db
     .prepare('SELECT id, name, category, color, target_per_day as targetPerDay, sort_order as sortOrder FROM habits WHERE id = ?')
@@ -52,17 +53,57 @@ app.post('/api/habits', (req, res) => {
   res.status(201).json({ habit, dashboard });
 });
 
+app.delete('/api/habits/:id', (req, res) => {
+  const habitId = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(habitId)) {
+    res.status(400).json({ error: 'Gecersiz habit id' });
+    return;
+  }
+
+  const habit = db.prepare('SELECT id FROM habits WHERE id = ? AND is_archived = 0').get(habitId);
+  if (!habit) {
+    res.status(404).json({ error: 'Aliskanlik bulunamadi' });
+    return;
+  }
+
+  db.prepare('UPDATE habits SET is_archived = 1 WHERE id = ?').run(habitId);
+  const dashboard = buildDashboardPayload(db);
+  res.json({ status: 'archived', dashboard });
+});
+
+app.post('/api/habits/:id/restore', (req, res) => {
+  const habitId = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(habitId)) {
+    res.status(400).json({ error: 'Gecersiz habit id' });
+    return;
+  }
+
+  const habit = db.prepare('SELECT id FROM habits WHERE id = ?').get(habitId);
+  if (!habit) {
+    res.status(404).json({ error: 'Aliskanlik bulunamadi' });
+    return;
+  }
+
+  db.prepare('UPDATE habits SET is_archived = 0 WHERE id = ?').run(habitId);
+  const dashboard = buildDashboardPayload(db);
+  res.json({ status: 'restored', dashboard });
+});
+
 app.post('/api/habit-entries/toggle', (req, res) => {
   const { habitId, date } = req.body || {};
   if (!habitId) {
-    res.status(400).json({ error: 'habitId değeri gereklidir' });
+    res.status(400).json({ error: 'habitId degeri gereklidir' });
     return;
   }
   const todayKey = date || new Date().toISOString().slice(0, 10);
 
-  const habit = db.prepare('SELECT id FROM habits WHERE id = ?').get(habitId);
+  const habit = db.prepare('SELECT id, is_archived FROM habits WHERE id = ?').get(habitId);
   if (!habit) {
-    res.status(404).json({ error: 'Alışkanlık bulunamadı' });
+    res.status(404).json({ error: 'Aliskanlik bulunamadi' });
+    return;
+  }
+  if (habit.is_archived) {
+    res.status(400).json({ error: 'Arsivdeki aliskanlik guncellenemez' });
     return;
   }
 
@@ -77,6 +118,13 @@ app.post('/api/habit-entries/toggle', (req, res) => {
 
   const dashboard = buildDashboardPayload(db);
   res.json({ status, dashboard });
+});
+
+app.post('/api/reset', (req, res) => {
+  db.prepare('DELETE FROM habit_entries').run();
+  db.prepare('DELETE FROM habits').run();
+  const dashboard = buildDashboardPayload(db);
+  res.json({ status: 'reset', dashboard });
 });
 
 app.listen(PORT, () => {

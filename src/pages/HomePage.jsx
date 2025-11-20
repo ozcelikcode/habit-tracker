@@ -1,9 +1,10 @@
 import { Menu, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeMenu from '../components/ThemeMenu.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
 import { toggleHabitEntry } from '../lib/api.js';
+import { getDeletedTaskIds, subscribeToDeletedTasks } from '../lib/deletedTasks.js';
 
 const NAV_LINKS = [
   { label: 'Kontrol Paneli', path: '/control-panel' },
@@ -26,6 +27,7 @@ function HomePage() {
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, label: '' });
   const [isNavOpen, setIsNavOpen] = useState(false);
   const heatmapRef = useRef(null);
+  const [deletedTaskIds, setDeletedTaskIds] = useState(() => getDeletedTaskIds());
 
   const statsCards = [
     { label: 'Mevcut Seri', value: data ? `${data.stats.currentStreak} gün` : '--' },
@@ -36,7 +38,18 @@ function HomePage() {
   const heatmapWeeks = data?.heatmap ?? HEATMAP_PLACEHOLDER;
   const monthLabels = data?.heatmapMonths ?? MONTH_FALLBACK;
   const todayTasks = data?.todayTasks ?? [];
+  const visibleTodayTasks = useMemo(() => {
+    const deletedSet = new Set(deletedTaskIds);
+    return todayTasks.filter((task) => !deletedSet.has(task.id));
+  }, [todayTasks, deletedTaskIds]);
   const statusMessage = loading ? 'Veriler yükleniyor...' : error ? 'Veriler alınamadı.' : null;
+
+  useEffect(() => {
+    const unsubscribe = subscribeToDeletedTasks((tasks) => {
+      setDeletedTaskIds(tasks.map((task) => task.id));
+    });
+    return unsubscribe;
+  }, []);
   const handleCellEnter = (event, day) => {
     if (!heatmapRef.current) return;
     const containerRect = heatmapRef.current.getBoundingClientRect();
@@ -234,7 +247,7 @@ function HomePage() {
                 {actionError && <p className="text-xs text-red-300">{actionError}</p>}
               </div>
               <div className="mt-4 space-y-2">
-                {todayTasks.map((task) => (
+                {visibleTodayTasks.map((task) => (
                   <label
                     key={task.id}
                     htmlFor={`task-${task.id}`}
@@ -260,7 +273,7 @@ function HomePage() {
                     </span>
                   </label>
                 ))}
-                {!todayTasks.length && <p className="text-sm text-muted">Bugün için görev bulunamadı.</p>}
+                {!visibleTodayTasks.length && <p className="text-sm text-muted">Bugün için görev bulunamadı.</p>}
               </div>
             </div>
           </aside>

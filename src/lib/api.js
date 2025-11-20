@@ -19,6 +19,22 @@ export async function createHabit(payload) {
   return handleResponse(response);
 }
 
+export async function deleteHabit(habitId) {
+  const response = await fetch(`/api/habits/${habitId}`, {
+    method: 'DELETE',
+    headers: JSON_HEADERS,
+  });
+  return handleResponse(response);
+}
+
+export async function restoreHabit(habitId) {
+  const response = await fetch(`/api/habits/${habitId}/restore`, {
+    method: 'POST',
+    headers: JSON_HEADERS,
+  });
+  return handleResponse(response);
+}
+
 export async function toggleHabitEntry(payload) {
   const response = await fetch('/api/habit-entries/toggle', {
     method: 'POST',

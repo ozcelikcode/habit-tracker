@@ -1,5 +1,6 @@
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const TOTAL_WEEKS = 28;
+const TODAY_TASK_LIMIT = 50;
 
 const formatDate = (date) => date.toISOString().slice(0, 10);
 
@@ -34,11 +35,17 @@ function fetchHabits(db) {
 function buildTodayTasks(db, habits) {
   const todayKey = formatDate(new Date());
   const entries = db
-    .prepare('SELECT habit_id as habitId, SUM(amount) as total FROM habit_entries WHERE date = ? GROUP BY habit_id')
+    .prepare(
+      `SELECT he.habit_id as habitId, SUM(he.amount) as total
+       FROM habit_entries he
+       JOIN habits h ON h.id = he.habit_id
+       WHERE he.date = ? AND h.is_archived = 0
+       GROUP BY he.habit_id`
+    )
     .all(todayKey);
   const entryMap = new Map(entries.map((entry) => [entry.habitId, entry.total]));
 
-  return habits.slice(0, 8).map((habit) => ({
+  return habits.slice(0, TODAY_TASK_LIMIT).map((habit) => ({
     id: habit.id,
     title: habit.name,
     category: habit.category,
@@ -60,7 +67,14 @@ function buildUpcomingTasks(habits) {
 
 function buildStats(db) {
   const totals = db
-    .prepare('SELECT date, SUM(amount) as total FROM habit_entries GROUP BY date ORDER BY date')
+    .prepare(
+      `SELECT he.date, SUM(he.amount) as total
+       FROM habit_entries he
+       JOIN habits h ON h.id = he.habit_id
+       WHERE h.is_archived = 0
+       GROUP BY he.date
+       ORDER BY he.date`
+    )
     .all();
 
   const completionDays = totals.filter((row) => Number(row.total) > 0).map((row) => row.date);
@@ -115,7 +129,13 @@ function buildHeatmap(db) {
   const totalDays = TOTAL_WEEKS * 7;
   const today = new Date();
   const aggregates = db
-    .prepare('SELECT date, SUM(amount) as total FROM habit_entries GROUP BY date')
+    .prepare(
+      `SELECT he.date, SUM(he.amount) as total
+       FROM habit_entries he
+       JOIN habits h ON h.id = he.habit_id
+       WHERE h.is_archived = 0
+       GROUP BY he.date`
+    )
     .all();
   const aggregateMap = new Map(aggregates.map((item) => [item.date, Number(item.total || 0)]));
 

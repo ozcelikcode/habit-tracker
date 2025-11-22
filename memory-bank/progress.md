@@ -1,0 +1,6 @@
+# Progress
+
+- Setup: Memory Bank created and updated with captured requirements.
+- Status: Phase 1 decisions locked (Prisma, JSON export/import, offline/PWA strategy, encryption stance with E2E for sensitive data, daily backups). Stack direction set: frontend TypeScript + React Native + Tamagui; backend Node.js + Fastify + Prisma; SQLite. Phase 2 draft created in `memory-bank/architecture.md` (auth/session via secure cookies + CSRF, data model, API contracts, offline sync, E2E notes).
+- Progress: Backend scaffolded (`backend/`) with Fastify/TypeScript, base plugins, scripts; Prisma pinned to 5.19.1; schema modeled with string-based frequency/job types and stringified customRule; `prisma db push` synced to `prisma/dev.db` (migrate dev blocked by non-interactive env). Added env config, Prisma plugin, crypto helpers, error helper, session service (hashed session tokens, CSRF cookie), and auth routes (register/login/logout/me/password) using zod + argon2; `npm run build` passes.
+- Next milestones: add reusable auth middleware for protected routes, implement habits/logs/streak/export/import endpoints, and formalize E2E key handling. Revisit migration generation when an interactive shell is available or continue with db push in dev.

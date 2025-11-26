@@ -5,7 +5,10 @@ import helmet from '@fastify/helmet';
 import formBody from '@fastify/formbody';
 import { env } from './config/env';
 import { prismaPlugin } from './plugins/prisma';
+import { authPlugin } from './plugins/auth';
 import { authRoutes } from './routes/auth';
+import { habitRoutes } from './routes/habits';
+import { cryptoRoutes } from './routes/crypto';
 
 const app = fastify({
   logger: true,
@@ -20,11 +23,14 @@ async function buildServer() {
   await app.register(cookie);
   await app.register(formBody);
   await app.register(prismaPlugin);
+  await app.register(authPlugin);
 
   // Healthcheck / status
   app.get('/health', async () => ({ status: 'ok' }));
 
   await app.register(authRoutes);
+  await app.register(habitRoutes);
+  await app.register(cryptoRoutes);
 
   return app;
 }

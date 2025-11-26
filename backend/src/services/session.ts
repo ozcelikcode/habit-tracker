@@ -1,13 +1,14 @@
 import { FastifyReply } from 'fastify';
 import { addDays } from 'date-fns';
 import { prisma } from '../lib/prisma';
+import type { User } from '../generated/prisma';
 import { hashToken, randomToken } from '../lib/crypto';
 import { env, isProduction } from '../config/env';
 
 const COOKIE_NAME = env.sessionCookieName;
 
 export type SessionResult =
-  | { ok: true; userId: string; csrfToken: string }
+  | { ok: true; userId: string; csrfToken: string; user: User }
   | { ok: false; reason: 'NO_SESSION' | 'EXPIRED' };
 
 export async function createSession(userId: string) {
@@ -50,7 +51,12 @@ export async function verifySession(token?: string, csrfHeader?: string): Promis
   if (csrfHeader && session.csrfToken !== csrfHeader) {
     return { ok: false, reason: 'NO_SESSION' };
   }
-  return { ok: true, userId: session.userId, csrfToken: session.csrfToken };
+  return {
+    ok: true,
+    userId: session.userId,
+    csrfToken: session.csrfToken,
+    user: session.user,
+  };
 }
 
 export function setSessionCookies(reply: FastifyReply, rawToken: string, csrfToken: string, expires: Date) {

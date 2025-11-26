@@ -10,6 +10,7 @@
 - User: id, username (unique), email (optional), passwordHash, createdAt, updatedAt.
 - Account (OAuth): id, userId FK, provider, providerAccountId (unique per provider), accessToken?, refreshToken?, createdAt.
 - Session: id, userId FK, sessionToken (hashed, unique), csrfToken, expiresAt, createdAt, updatedAt.
+- User E2E: e2eKeyVersion (int), e2eRecoveryHint (string?; optional user note/hint, key not stored).
 - Habit: id, userId FK, title, description (encrypted/string), frequency (string; app-enforced options daily/weekly/monthly/yearly/custom), customRule (string JSON payload, encrypted), startDate?, endDate?, timezone (default Europe/Istanbul), createdAt, updatedAt, deletedAt?.
 - HabitLog: id, habitId FK, date (TZ-bound), count (int >=1), note (encrypted/string), createdAt, updatedAt, deletedAt?. No backdating allowed.
 - StreakSnapshot: id, habitId FK, streakLength, lastActiveDate, updatedAt.
@@ -51,6 +52,7 @@
 
 ## Notes
 - Prisma pinned to 5.19.1 (SQLite + string fields for enums/json) for stability on Windows; db changes applied with `prisma db push` (non-interactive migrate dev blocked).
+- E2E key rotation API: `/crypto/key-info` (GET) returns {version, recoveryHint}; `/crypto/rotate` (POST) increments version and sets recoveryHint; client re-encrypts data with new key, server never stores keys.
 
 ## Notes / Open Points
 - Soft-delete vs hard-delete for habits/logs.

@@ -14,7 +14,7 @@
 - Plan auth flows (username/password + Google) and password change endpoint; session/token strategy.
 - Specify site-internal notification mechanism (in-app/push-style).
 - Define E2E key handling approach (storage, rotation, recovery constraints).
-- Status: in progress (architecture draft added in `memory-bank/architecture.md`; decisions taken: soft delete via deletedAt, E2E recovery via user-held recovery key + re-encrypt on rotation, standard error envelope). Schema modeled and `prisma db push` applied with Prisma 5.19.1; migrate dev pending due to non-interactive environment. Auth routes implemented (register/login/logout/me/password) with hashed session tokens and CSRF cookie.
+- Status: in progress (architecture draft added in `memory-bank/architecture.md`; decisions taken: soft delete via deletedAt, E2E recovery via user-held recovery key + re-encrypt on rotation, standard error envelope). Schema modeled and `prisma db push` applied with Prisma 5.19.1; migrate dev pending due to non-interactive environment. Auth routes implemented (register/login/logout/me/password) with hashed session tokens and CSRF cookie; habit/log/streak/heatmap/export/import endpoints added.
 
 ## Phase 3: Backend Implementation (Node.js + Fastify + ORM on SQLite)
 - Set up SQLite schema/migrations; seed minimal data.

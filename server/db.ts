@@ -1,0 +1,46 @@
+import Database from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const db = new Database(path.join(__dirname, 'habits.db'));
+
+// Veritabanı tablolarını oluştur
+db.exec(`
+  -- Alışkanlıklar tablosu
+  CREATE TABLE IF NOT EXISTS habits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    subtitle TEXT,
+    color TEXT DEFAULT '#2EAC8A',
+    frequency TEXT DEFAULT 'daily', -- daily, weekdays, custom
+    custom_days TEXT, -- JSON array for custom days [0,1,2,3,4,5,6] (0=Pazar)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    archived INTEGER DEFAULT 0
+  );
+
+  -- Alışkanlık tamamlama kayıtları
+  CREATE TABLE IF NOT EXISTS completions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    habit_id INTEGER NOT NULL,
+    completed_date DATE NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE,
+    UNIQUE(habit_id, completed_date)
+  );
+
+  -- Kullanıcı ayarları
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+
+  -- Varsayılan ayarları ekle
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('username', 'Kullanıcı');
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('theme', 'dark');
+`);
+
+export default db;

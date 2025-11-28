@@ -115,11 +115,31 @@ export default function Habits() {
               <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-1">{habit.title}</h3>
               {habit.subtitle && <p className="text-gray-500 dark:text-white/50 text-sm mb-3">{habit.subtitle}</p>}
 
-              <div className="flex items-center gap-2 text-gray-400 dark:text-white/40 text-sm">
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
-                  schedule
+              <div className="flex flex-wrap items-center gap-2 text-sm mt-3">
+                {/* Frequency */}
+                <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/60">
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>event_repeat</span>
+                  {getFrequencyLabel(habit.frequency)}
                 </span>
-                {getFrequencyLabel(habit.frequency)}
+                
+                {/* Scheduled Time */}
+                {habit.scheduled_time && (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+                    {habit.scheduled_time}
+                  </span>
+                )}
+                
+                {/* Duration */}
+                {habit.duration_minutes && (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent-orange/10 text-accent-orange">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>timer</span>
+                    {habit.duration_minutes >= 60 
+                      ? `${Math.floor(habit.duration_minutes / 60)}sa ${habit.duration_minutes % 60 > 0 ? (habit.duration_minutes % 60) + 'dk' : ''}`
+                      : `${habit.duration_minutes}dk`
+                    }
+                  </span>
+                )}
               </div>
             </div>
           ))}

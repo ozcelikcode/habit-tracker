@@ -38,16 +38,24 @@ app.get('/api/habits/:id', (req, res) => {
 // Yeni alışkanlık oluştur
 app.post('/api/habits', (req, res) => {
   try {
-    const { title, subtitle, color, frequency, custom_days } = req.body;
+    const { title, subtitle, color, frequency, custom_days, scheduled_time, duration_minutes } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: 'Başlık gerekli' });
     }
 
     const result = db.prepare(`
-      INSERT INTO habits (title, subtitle, color, frequency, custom_days)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(title, subtitle || null, color || '#2EAC8A', frequency || 'daily', custom_days ? JSON.stringify(custom_days) : null);
+      INSERT INTO habits (title, subtitle, color, frequency, custom_days, scheduled_time, duration_minutes)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      title, 
+      subtitle || null, 
+      color || '#2EAC8A', 
+      frequency || 'daily', 
+      custom_days ? JSON.stringify(custom_days) : null,
+      scheduled_time || null,
+      duration_minutes || null
+    );
 
     const newHabit = db.prepare('SELECT * FROM habits WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(newHabit);
@@ -59,7 +67,7 @@ app.post('/api/habits', (req, res) => {
 // Alışkanlık güncelle
 app.put('/api/habits/:id', (req, res) => {
   try {
-    const { title, subtitle, color, frequency, custom_days } = req.body;
+    const { title, subtitle, color, frequency, custom_days, scheduled_time, duration_minutes } = req.body;
     
     db.prepare(`
       UPDATE habits 
@@ -68,9 +76,20 @@ app.put('/api/habits/:id', (req, res) => {
           color = COALESCE(?, color),
           frequency = COALESCE(?, frequency),
           custom_days = COALESCE(?, custom_days),
+          scheduled_time = ?,
+          duration_minutes = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(title, subtitle, color, frequency, custom_days ? JSON.stringify(custom_days) : null, req.params.id);
+    `).run(
+      title, 
+      subtitle, 
+      color, 
+      frequency, 
+      custom_days ? JSON.stringify(custom_days) : null, 
+      scheduled_time !== undefined ? scheduled_time : null,
+      duration_minutes !== undefined ? duration_minutes : null,
+      req.params.id
+    );
 
     const updated = db.prepare('SELECT * FROM habits WHERE id = ?').get(req.params.id);
     res.json(updated);

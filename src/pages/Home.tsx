@@ -150,33 +150,78 @@ export default function Home() {
               ) : (
                 habits.map((habit) => {
                   const isCompleted = completions.some((c) => c.habit_id === habit.id);
+                  const formatDuration = (mins: number) => {
+                    const h = Math.floor(mins / 60);
+                    const m = mins % 60;
+                    return h > 0 ? `${h}sa ${m > 0 ? m + 'dk' : ''}` : `${m}dk`;
+                  };
                   return (
-                    <label
+                    <div
                       key={habit.id}
-                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors cursor-pointer group"
+                      className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
+                        isCompleted 
+                          ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-[#32675a]/50' 
+                          : 'bg-white dark:bg-white/5 border-gray-200 dark:border-[#32675a] hover:border-primary/30'
+                      }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isCompleted}
-                        onChange={() => toggleHabit(habit.id)}
-                        className="size-5 bg-transparent border-2 border-gray-400 dark:border-white/30 rounded text-primary focus:ring-primary"
-                        style={{ accentColor: habit.color }}
-                      />
-                      <div className="flex flex-col">
-                        <span
-                          className={`text-gray-800 dark:text-white/90 ${isCompleted ? 'line-through text-gray-400 dark:text-white/50' : ''}`}
-                        >
-                          {habit.title}
-                        </span>
+                      {/* Checkbox */}
+                      <label className="flex items-center cursor-pointer mt-1">
+                        <input
+                          type="checkbox"
+                          checked={isCompleted}
+                          onChange={() => toggleHabit(habit.id)}
+                          className="size-5 bg-transparent border-2 border-gray-400 dark:border-white/30 rounded text-primary focus:ring-primary cursor-pointer"
+                          style={{ accentColor: habit.color }}
+                        />
+                      </label>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-medium ${isCompleted ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-800 dark:text-white'}`}
+                          >
+                            {habit.title}
+                          </span>
+                          <div
+                            className="size-2.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: habit.color }}
+                          />
+                        </div>
+                        
                         {habit.subtitle && (
-                          <span className="text-gray-500 dark:text-white/50 text-sm">{habit.subtitle}</span>
+                          <p className={`text-sm mt-0.5 ${isCompleted ? 'text-gray-400 dark:text-white/30' : 'text-gray-500 dark:text-white/50'}`}>
+                            {habit.subtitle}
+                          </p>
+                        )}
+
+                        {/* Time & Duration */}
+                        {(habit.scheduled_time || habit.duration_minutes) && (
+                          <div className="flex items-center gap-3 mt-2 text-xs">
+                            {habit.scheduled_time && (
+                              <span className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                                isCompleted 
+                                  ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
+                                  : 'bg-primary/10 text-primary'
+                              }`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+                                {habit.scheduled_time}
+                              </span>
+                            )}
+                            {habit.duration_minutes && (
+                              <span className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                                isCompleted 
+                                  ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
+                                  : 'bg-accent-orange/10 text-accent-orange'
+                              }`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>timer</span>
+                                {formatDuration(habit.duration_minutes)}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                      <div
-                        className="ml-auto size-3 rounded-full"
-                        style={{ backgroundColor: habit.color }}
-                      />
-                    </label>
+                    </div>
                   );
                 })
               )}

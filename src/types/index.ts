@@ -5,6 +5,8 @@ export interface Habit {
   color: string;
   frequency: 'daily' | 'weekdays' | 'custom';
   custom_days: string | null; // JSON string of number array
+  scheduled_time: string | null; // "HH:MM" format - ne zaman çalışacak
+  duration_minutes: number | null; // kaç dakika sürecek
   created_at: string;
   updated_at: string;
   archived: number;
@@ -31,7 +33,8 @@ export interface CalendarData {
 export interface Settings {
   username: string;
   theme: 'dark' | 'light';
-  [key: string]: string;
+  accentColor?: string;
+  [key: string]: string | undefined;
 }
 
 // Alışkanlık renkleri - Açık ve koyu temaya uyumlu zarif renkler

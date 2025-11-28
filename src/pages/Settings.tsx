@@ -31,9 +31,12 @@ export default function Settings() {
       await Promise.all([
         updateSetting('username', settings.username),
         updateSetting('theme', settings.theme),
+        updateSetting('accentColor', settings.accentColor || '#2EAC8A'),
       ]);
       // Tema değişikliğini tetikle
       document.documentElement.classList.toggle('dark', settings.theme === 'dark');
+      // Accent rengi CSS değişkeni olarak ayarla
+      document.documentElement.style.setProperty('--color-primary', settings.accentColor || '#2EAC8A');
       window.dispatchEvent(new Event('themeChange'));
       setMessage('Ayarlar kaydedildi!');
       setTimeout(() => setMessage(''), 3000);
@@ -78,15 +81,17 @@ export default function Settings() {
         {/* Tema */}
         <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
           <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Görünüm</h3>
-          <div>
-            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Tema</label>
+          
+          {/* Tema Modu */}
+          <div className="mb-6">
+            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Tema Modu</label>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setSettings({ ...settings, theme: 'dark' })}
                 className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
                   settings.theme === 'dark'
-                    ? 'bg-primary text-white dark:text-background-dark border-primary font-medium'
+                    ? 'bg-primary text-white border-primary font-medium'
                     : 'bg-white dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
                 }`}
               >
@@ -100,7 +105,7 @@ export default function Settings() {
                 onClick={() => setSettings({ ...settings, theme: 'light' })}
                 className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
                   settings.theme === 'light'
-                    ? 'bg-primary text-white dark:text-background-dark border-primary font-medium'
+                    ? 'bg-primary text-white border-primary font-medium'
                     : 'bg-white dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
                 }`}
               >
@@ -110,6 +115,44 @@ export default function Settings() {
                 Açık
               </button>
             </div>
+          </div>
+
+          {/* Accent Renk */}
+          <div>
+            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-3">Vurgu Rengi</label>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { name: 'Zümrüt', value: '#2EAC8A', class: 'bg-[#2EAC8A]' },
+                { name: 'Turkuaz', value: '#14B8A6', class: 'bg-[#14B8A6]' },
+                { name: 'Okyanus', value: '#0EA5E9', class: 'bg-[#0EA5E9]' },
+                { name: 'Mor', value: '#8B5CF6', class: 'bg-[#8B5CF6]' },
+                { name: 'Pembe', value: '#EC4899', class: 'bg-[#EC4899]' },
+                { name: 'Gül', value: '#F43F5E', class: 'bg-[#F43F5E]' },
+                { name: 'Turuncu', value: '#FB923C', class: 'bg-[#FB923C]' },
+                { name: 'Amber', value: '#F59E0B', class: 'bg-[#F59E0B]' },
+              ].map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setSettings({ ...settings, accentColor: color.value })}
+                  className={`group relative size-10 rounded-full transition-all hover:scale-110 ${color.class} ${
+                    settings.accentColor === color.value || (!settings.accentColor && color.value === '#2EAC8A')
+                      ? 'ring-2 ring-offset-2 ring-gray-800 dark:ring-white ring-offset-gray-100 dark:ring-offset-gray-800 scale-110'
+                      : ''
+                  }`}
+                  title={color.name}
+                >
+                  {(settings.accentColor === color.value || (!settings.accentColor && color.value === '#2EAC8A')) && (
+                    <span className="material-symbols-outlined absolute inset-0 flex items-center justify-center text-white" style={{ fontSize: 20 }}>
+                      check
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="text-gray-500 dark:text-white/40 text-xs mt-2">
+              Seçilen renk butonlar ve vurgular için kullanılır.
+            </p>
           </div>
         </div>
 

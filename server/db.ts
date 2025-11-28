@@ -17,6 +17,8 @@ db.exec(`
     color TEXT DEFAULT '#2EAC8A',
     frequency TEXT DEFAULT 'daily', -- daily, weekdays, custom
     custom_days TEXT, -- JSON array for custom days [0,1,2,3,4,5,6] (0=Pazar)
+    scheduled_time TEXT, -- HH:MM format - ne zaman çalışacak
+    duration_minutes INTEGER, -- kaç dakika sürecek
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     archived INTEGER DEFAULT 0
@@ -42,5 +44,17 @@ db.exec(`
   INSERT OR IGNORE INTO settings (key, value) VALUES ('username', 'Kullanıcı');
   INSERT OR IGNORE INTO settings (key, value) VALUES ('theme', 'dark');
 `);
+
+// Migration: Yeni sütunları ekle (mevcut veritabanı için)
+try {
+  db.exec(`ALTER TABLE habits ADD COLUMN scheduled_time TEXT`);
+} catch (e) {
+  // Sütun zaten var
+}
+try {
+  db.exec(`ALTER TABLE habits ADD COLUMN duration_minutes INTEGER`);
+} catch (e) {
+  // Sütun zaten var
+}
 
 export default db;

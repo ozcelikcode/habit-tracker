@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createHabit } from '../api';
 import { HABIT_COLORS, FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
+import TimePicker from '../components/TimePicker';
+import DurationPicker from '../components/DurationPicker';
 
 export default function NewHabit() {
   const navigate = useNavigate();
@@ -13,6 +15,10 @@ export default function NewHabit() {
   const [color, setColor] = useState(HABIT_COLORS[0].value);
   const [frequency, setFrequency] = useState<'daily' | 'weekdays' | 'custom'>('daily');
   const [customDays, setCustomDays] = useState<number[]>([]);
+  const [scheduledTime, setScheduledTime] = useState<string | null>(null);
+  const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showDurationPicker, setShowDurationPicker] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +43,8 @@ export default function NewHabit() {
         color,
         frequency,
         custom_days: frequency === 'custom' ? JSON.stringify(customDays) : undefined,
+        scheduled_time: scheduledTime || undefined,
+        duration_minutes: durationMinutes || undefined,
       });
       navigate('/habits');
     } catch (err) {
@@ -145,6 +153,67 @@ export default function NewHabit() {
           </div>
         )}
 
+        {/* Saat ve Süre */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Planlanan Saat */}
+          <div>
+            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-lg">schedule</span>
+                Planlanan Saat (Opsiyonel)
+              </span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowTimePicker(true)}
+              className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-left flex items-center justify-between hover:border-primary/50 transition-colors"
+            >
+              <span className={scheduledTime ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-white/30'}>
+                {scheduledTime ? scheduledTime : 'Saat seçin'}
+              </span>
+              {scheduledTime && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setScheduledTime(null); }}
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              )}
+            </button>
+          </div>
+
+          {/* Süre */}
+          <div>
+            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-lg">timer</span>
+                Süre (Opsiyonel)
+              </span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowDurationPicker(true)}
+              className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-left flex items-center justify-between hover:border-primary/50 transition-colors"
+            >
+              <span className={durationMinutes ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-white/30'}>
+                {durationMinutes 
+                  ? `${Math.floor(durationMinutes / 60) > 0 ? Math.floor(durationMinutes / 60) + ' sa ' : ''}${durationMinutes % 60 > 0 ? (durationMinutes % 60) + ' dk' : ''}`
+                  : 'Süre seçin'}
+              </span>
+              {durationMinutes && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setDurationMinutes(null); }}
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Hata Mesajı */}
         {error && (
           <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">{error}</div>
@@ -168,6 +237,25 @@ export default function NewHabit() {
           </button>
         </div>
       </form>
+
+      {/* Time Picker Modal */}
+      {showTimePicker && (
+        <TimePicker
+          value={scheduledTime || '09:00'}
+          onChange={setScheduledTime}
+          onClose={() => setShowTimePicker(false)}
+          title="Planlanan Saat"
+        />
+      )}
+
+      {/* Duration Picker Modal */}
+      {showDurationPicker && (
+        <DurationPicker
+          value={durationMinutes || 30}
+          onChange={setDurationMinutes}
+          onClose={() => setShowDurationPicker(false)}
+        />
+      )}
     </div>
   );
 }

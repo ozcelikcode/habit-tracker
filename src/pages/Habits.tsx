@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Plus, Pencil, Trash2, Repeat, CalendarDays, Clock, Timer, ClipboardList } from 'lucide-react';
 import { getHabits, deleteHabit } from '../api';
 import type { Habit } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
@@ -76,9 +77,7 @@ export default function Habits() {
           to="/habits/new"
           className="flex items-center gap-2 bg-primary text-white dark:text-background-dark font-bold text-sm px-5 py-3 rounded-lg hover:opacity-90 transition-opacity"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-            add
-          </span>
+          <Plus size={20} />
           Yeni Alışkanlık
         </Link>
       </div>
@@ -86,15 +85,13 @@ export default function Habits() {
       {/* Habits List */}
       {habits.length === 0 ? (
         <div className="text-center py-16 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
-          <span className="material-symbols-outlined text-gray-400 dark:text-white/30 text-6xl mb-4">checklist</span>
+          <ClipboardList size={64} className="text-gray-400 dark:text-white/30 mx-auto mb-4" />
           <p className="text-gray-500 dark:text-white/50 text-lg">Henüz alışkanlık eklemediniz.</p>
           <Link
             to="/habits/new"
             className="inline-flex items-center gap-2 mt-4 text-primary hover:underline"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-              add
-            </span>
+            <Plus size={18} />
             İlk alışkanlığınızı ekleyin
           </Link>
         </div>
@@ -115,17 +112,13 @@ export default function Habits() {
                     to={`/habits/${habit.id}/edit`}
                     className="p-2 text-gray-500 dark:text-white/50 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                      edit
-                    </span>
+                    <Pencil size={20} />
                   </Link>
                   <button
                     onClick={() => handleDelete(habit.id)}
                     className="p-2 text-gray-500 dark:text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                      delete
-                    </span>
+                    <Trash2 size={20} />
                   </button>
                 </div>
               </div>
@@ -137,14 +130,14 @@ export default function Habits() {
               <div className="flex flex-wrap items-center gap-2 text-sm mt-3">
                 {/* Frequency - Her zaman göster */}
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/60">
-                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>event_repeat</span>
+                  <Repeat size={16} />
                   {getFrequencyLabel(habit.frequency)}
                 </span>
                 
                 {/* Custom Days */}
                 {habit.frequency === 'custom' && habit.custom_days && (
                   <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-teal/10 text-accent-teal">
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>calendar_month</span>
+                    <CalendarDays size={16} />
                     {getCustomDaysLabel(habit.custom_days)}
                   </span>
                 )}
@@ -152,12 +145,12 @@ export default function Habits() {
                 {/* Scheduled Time */}
                 {habit.scheduled_time ? (
                   <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-medium">
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>schedule</span>
+                    <Clock size={16} />
                     {habit.scheduled_time}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>schedule</span>
+                    <Clock size={16} />
                     Saat yok
                   </span>
                 )}
@@ -165,12 +158,12 @@ export default function Habits() {
                 {/* Duration */}
                 {habit.duration_minutes ? (
                   <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-orange/10 text-accent-orange font-medium">
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>timer</span>
+                    <Timer size={16} />
                     {formatDuration(habit.duration_minutes)}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>timer</span>
+                    <Timer size={16} />
                     Süre yok
                   </span>
                 )}

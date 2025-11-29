@@ -269,6 +269,70 @@ app.get('/api/calendar/:year', (req, res) => {
   }
 });
 
+// ============ NOTES API ============
+
+// Bugünün notunu getir
+app.get('/api/notes/today', (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const note = db.prepare('SELECT * FROM daily_notes WHERE note_date = ?').get(today);
+    res.json(note || { note_date: today, content: '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Not getirilemedi' });
+  }
+});
+
+// Belirli tarihin notunu getir
+app.get('/api/notes/:date', (req, res) => {
+  try {
+    const note = db.prepare('SELECT * FROM daily_notes WHERE note_date = ?').get(req.params.date);
+    res.json(note || { note_date: req.params.date, content: '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Not getirilemedi' });
+  }
+});
+
+// Not olan tarihleri getir (takvim için)
+app.get('/api/notes', (req, res) => {
+  try {
+    const { year } = req.query;
+    let query = 'SELECT note_date FROM daily_notes WHERE content != ""';
+    const params: any[] = [];
+    
+    if (year) {
+      query += ' AND note_date >= ? AND note_date <= ?';
+      params.push(`${year}-01-01`, `${year}-12-31`);
+    }
+    
+    const notes = db.prepare(query).all(...params);
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ error: 'Notlar getirilemedi' });
+  }
+});
+
+// Bugünün notunu kaydet/güncelle
+app.post('/api/notes', (req, res) => {
+  try {
+    const { content } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (content && content.trim()) {
+      db.prepare(`
+        INSERT INTO daily_notes (note_date, content) VALUES (?, ?)
+        ON CONFLICT(note_date) DO UPDATE SET content = ?, updated_at = CURRENT_TIMESTAMP
+      `).run(today, content.trim(), content.trim());
+    } else {
+      // İçerik boşsa notu sil
+      db.prepare('DELETE FROM daily_notes WHERE note_date = ?').run(today);
+    }
+    
+    res.json({ success: true, note_date: today, content: content?.trim() || '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Not kaydedilemedi' });
+  }
+});
+
 // ============ SETTINGS API ============
 
 // Ayarları getir

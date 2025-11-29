@@ -1,4 +1,4 @@
-import type { Habit, Completion, Stats, CalendarData, Settings } from '../types';
+import type { Habit, Completion, Stats, CalendarData, Settings, DailyNote } from '../types';
 
 const API_BASE = '/api';
 
@@ -105,4 +105,28 @@ export async function updateSetting(key: string, value: string): Promise<void> {
     body: JSON.stringify({ value }),
   });
   if (!res.ok) throw new Error('Ayar güncellenemedi');
+}
+
+// ============ NOTES ============
+
+export async function getTodayNote(): Promise<DailyNote> {
+  const res = await fetch(`${API_BASE}/notes/today`);
+  if (!res.ok) throw new Error('Not getirilemedi');
+  return res.json();
+}
+
+export async function getNoteDates(year: number): Promise<{ note_date: string }[]> {
+  const res = await fetch(`${API_BASE}/notes?year=${year}`);
+  if (!res.ok) throw new Error('Not tarihleri getirilemedi');
+  return res.json();
+}
+
+export async function saveTodayNote(content: string): Promise<DailyNote> {
+  const res = await fetch(`${API_BASE}/notes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) throw new Error('Not kaydedilemedi');
+  return res.json();
 }

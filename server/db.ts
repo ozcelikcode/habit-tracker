@@ -40,6 +40,15 @@ db.exec(`
     value TEXT NOT NULL
   );
 
+  -- Günlük notlar
+  CREATE TABLE IF NOT EXISTS daily_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    note_date DATE NOT NULL UNIQUE,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   -- Varsayılan ayarları ekle
   INSERT OR IGNORE INTO settings (key, value) VALUES ('username', 'Kullanıcı');
   INSERT OR IGNORE INTO settings (key, value) VALUES ('theme', 'dark');

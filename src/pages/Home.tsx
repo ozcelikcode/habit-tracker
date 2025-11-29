@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings } from '../api';
-import type { Habit, Completion, Stats, Settings } from '../types';
+import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2 } from 'lucide-react';
+import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates } from '../api';
+import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
 import ContributionCalendar from '../components/ContributionCalendar';
 
@@ -13,6 +14,10 @@ export default function Home() {
   const [totalHabits, setTotalHabits] = useState(0);
   const [settings, setSettings] = useState<Settings>({ username: 'Kullanıcı', theme: 'dark' });
   const [loading, setLoading] = useState(true);
+  const [dailyNote, setDailyNote] = useState<DailyNote>({ note_date: '', content: '' });
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [noteDates, setNoteDates] = useState<string[]>([]);
 
   const today = new Date().toISOString().split('T')[0];
   const currentYear = new Date().getFullYear();
@@ -23,12 +28,14 @@ export default function Home() {
 
   async function loadData() {
     try {
-      const [habitsData, completionsData, statsData, calendarRes, settingsData] = await Promise.all([
+      const [habitsData, completionsData, statsData, calendarRes, settingsData, noteData, noteDatesData] = await Promise.all([
         getHabits(),
         getCompletions({ start_date: today, end_date: today }),
         getStats(),
         getCalendarData(currentYear),
         getSettings(),
+        getTodayNote(),
+        getNoteDates(currentYear),
       ]);
 
       setHabits(habitsData);
@@ -37,10 +44,31 @@ export default function Home() {
       setCalendarData(calendarRes.data);
       setTotalHabits(calendarRes.totalHabits);
       setSettings(settingsData);
+      setDailyNote(noteData);
+      setNoteDates(noteDatesData.map(n => n.note_date));
     } catch (error) {
       console.error('Veri yüklenirken hata:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveNote() {
+    if (noteSaving) return;
+    setNoteSaving(true);
+    setNoteSaved(false);
+    
+    try {
+      await saveTodayNote(dailyNote.content);
+      setNoteSaved(true);
+      // Not tarihlerini güncelle
+      const newNoteDates = await getNoteDates(currentYear);
+      setNoteDates(newNoteDates.map(n => n.note_date));
+      setTimeout(() => setNoteSaved(false), 2000);
+    } catch (error) {
+      console.error('Not kaydedilirken hata:', error);
+    } finally {
+      setNoteSaving(false);
     }
   }
 
@@ -91,9 +119,7 @@ export default function Home() {
           to="/habits/new"
           className="flex items-center gap-2 bg-primary text-white dark:text-background-dark font-bold text-sm px-5 py-3 rounded-lg hover:opacity-90 transition-opacity"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-            add
-          </span>
+          <Plus size={20} />
           Yeni Alışkanlık Ekle
         </Link>
       </div>
@@ -109,7 +135,7 @@ export default function Home() {
             Bu takvim, son bir yıldaki alışkanlık tamamlama ilerlemenizi gösterir. Renk tonları, o günkü tamamlama
             oranını temsil eder.
           </p>
-          <ContributionCalendar data={calendarData} totalHabits={totalHabits} year={currentYear} />
+          <ContributionCalendar data={calendarData} totalHabits={totalHabits} year={currentYear} noteDates={noteDates} />
         </div>
 
         {/* Sidebar */}
@@ -222,7 +248,7 @@ export default function Home() {
                               ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
                               : 'bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/60'
                           }`}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>event_repeat</span>
+                            <Repeat size={14} />
                             {getFrequencyLabel(habit.frequency)}
                           </span>
 
@@ -233,7 +259,7 @@ export default function Home() {
                                 ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
                                 : 'bg-accent-teal/10 text-accent-teal'
                             }`}>
-                              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>calendar_month</span>
+                              <CalendarDays size={14} />
                               {getCustomDaysLabel(habit.custom_days)}
                             </span>
                           )}
@@ -245,12 +271,12 @@ export default function Home() {
                                 ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
                                 : 'bg-primary/10 text-primary'
                             }`}>
-                              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+                              <Clock size={14} />
                               {habit.scheduled_time}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">
-                              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+                              <Clock size={14} />
                               Saat yok
                             </span>
                           )}
@@ -262,12 +288,12 @@ export default function Home() {
                                 ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
                                 : 'bg-accent-orange/10 text-accent-orange'
                             }`}>
-                              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>timer</span>
+                              <Timer size={14} />
                               {formatDuration(habit.duration_minutes)}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">
-                              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>timer</span>
+                              <Timer size={14} />
                               Süre yok
                             </span>
                           )}
@@ -277,6 +303,53 @@ export default function Home() {
                   );
                 })
               )}
+            </div>
+          </div>
+
+          {/* Daily Note */}
+          <div className="mt-8">
+            <h2 className="text-gray-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5 flex items-center gap-2">
+              <StickyNote size={22} className="text-primary" />
+              Günün Notu
+            </h2>
+            <div className="p-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+              <textarea
+                value={dailyNote.content}
+                onChange={(e) => setDailyNote({ ...dailyNote, content: e.target.value })}
+                placeholder="Bugün için notlarınızı buraya yazın..."
+                className="w-full h-32 px-4 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              />
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-gray-400 dark:text-white/30 text-xs">
+                  Sadece bugün için not ekleyebilirsiniz
+                </p>
+                <button
+                  onClick={handleSaveNote}
+                  disabled={noteSaving}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                    noteSaved
+                      ? 'bg-green-500/20 text-green-500 border border-green-500/30'
+                      : 'bg-primary text-white dark:text-background-dark hover:opacity-90'
+                  } disabled:opacity-50`}
+                >
+                  {noteSaving ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Kaydediliyor...
+                    </>
+                  ) : noteSaved ? (
+                    <>
+                      <Save size={16} />
+                      Kaydedildi!
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Kaydet
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

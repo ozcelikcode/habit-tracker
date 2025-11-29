@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
+import { StickyNote } from 'lucide-react';
 
 interface CalendarProps {
   data: { completed_date: string; completed_count: number }[];
   totalHabits: number;
   year: number;
+  noteDates?: string[];
 }
 
-export default function ContributionCalendar({ data, totalHabits, year }: CalendarProps) {
+export default function ContributionCalendar({ data, totalHabits, year, noteDates = [] }: CalendarProps) {
+  const noteDatesSet = useMemo(() => new Set(noteDates), [noteDates]);
   const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
   // Takvim verilerini oluştur
@@ -134,7 +137,7 @@ export default function ContributionCalendar({ data, totalHabits, year }: Calend
               {week.map((cell, dayIndex) => (
                 <div
                   key={`${weekIndex}-${dayIndex}`}
-                  className={`aspect-square rounded-[2px] sm:rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover:ring-gray-400 dark:hover:ring-white/50 ${
+                  className={`aspect-square rounded-[2px] sm:rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover:ring-gray-400 dark:hover:ring-white/50 relative ${
                     cell.level === -1 ? 'bg-transparent cursor-default' : getLevelClass(cell.level)
                   }`}
                   onMouseEnter={(e) => {
@@ -149,7 +152,12 @@ export default function ContributionCalendar({ data, totalHabits, year }: Calend
                       setHoveredCell(hoveredCell?.date === cell.date ? null : { date: cell.date, count: cell.count, x: 0, y: 0 });
                     }
                   }}
-                />
+                >
+                  {/* Not göstergesi */}
+                  {cell.date && noteDatesSet.has(cell.date) && (
+                    <div className="absolute -top-0.5 -right-0.5 size-1.5 sm:size-2 bg-amber-400 rounded-full border border-white dark:border-background-dark" />
+                  )}
+                </div>
               ))}
             </div>
           ))}
@@ -182,6 +190,12 @@ export default function ContributionCalendar({ data, totalHabits, year }: Calend
           <div className="text-gray-300">
             {hoveredCell.count}/{totalHabits} görev tamamlandı
           </div>
+          {noteDatesSet.has(hoveredCell.date) && (
+            <div className="flex items-center gap-1 text-amber-400 mt-1">
+              <StickyNote size={12} />
+              <span>Not var</span>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -37,6 +37,14 @@ export interface Settings {
   [key: string]: string | undefined;
 }
 
+export interface DailyNote {
+  id?: number;
+  note_date: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Alışkanlık renkleri - Açık ve koyu temaya uyumlu zarif renkler
 export const HABIT_COLORS = [
   { name: 'Turkuaz', value: '#14B8A6' },     // Teal - Site accent

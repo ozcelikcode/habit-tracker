@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Moon, Sun, Check } from 'lucide-react';
 import { getSettings, updateSetting } from '../api';
 import type { Settings as SettingsType } from '../types';
 
@@ -95,9 +96,7 @@ export default function Settings() {
                     : 'bg-white dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
                 }`}
               >
-                <span className="material-symbols-outlined mr-2" style={{ fontSize: 20, verticalAlign: 'middle' }}>
-                  dark_mode
-                </span>
+                <Moon size={20} className="mr-2 inline-block align-middle" />
                 Koyu
               </button>
               <button
@@ -109,9 +108,7 @@ export default function Settings() {
                     : 'bg-white dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
                 }`}
               >
-                <span className="material-symbols-outlined mr-2" style={{ fontSize: 20, verticalAlign: 'middle' }}>
-                  light_mode
-                </span>
+                <Sun size={20} className="mr-2 inline-block align-middle" />
                 Açık
               </button>
             </div>
@@ -143,9 +140,7 @@ export default function Settings() {
                   title={color.name}
                 >
                   {(settings.accentColor === color.value || (!settings.accentColor && color.value === '#2EAC8A')) && (
-                    <span className="material-symbols-outlined absolute inset-0 flex items-center justify-center text-white" style={{ fontSize: 20 }}>
-                      check
-                    </span>
+                    <Check size={20} className="absolute inset-0 m-auto text-white" />
                   )}
                 </button>
               ))}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Clock, Timer, X } from 'lucide-react';
 import { createHabit } from '../api';
 import { HABIT_COLORS, FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
 import TimePicker from '../components/TimePicker';
@@ -159,7 +160,7 @@ export default function NewHabit() {
           <div>
             <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
               <span className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">schedule</span>
+                <Clock size={18} />
                 Planlanan Saat (Opsiyonel)
               </span>
             </label>
@@ -177,7 +178,7 @@ export default function NewHabit() {
                   onClick={(e) => { e.stopPropagation(); setScheduledTime(null); }}
                   className="text-gray-400 hover:text-red-500"
                 >
-                  <span className="material-symbols-outlined text-lg">close</span>
+                  <X size={18} />
                 </button>
               )}
             </button>
@@ -187,7 +188,7 @@ export default function NewHabit() {
           <div>
             <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
               <span className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">timer</span>
+                <Timer size={18} />
                 Süre (Opsiyonel)
               </span>
             </label>
@@ -207,7 +208,7 @@ export default function NewHabit() {
                   onClick={(e) => { e.stopPropagation(); setDurationMinutes(null); }}
                   className="text-gray-400 hover:text-red-500"
                 >
-                  <span className="material-symbols-outlined text-lg">close</span>
+                  <X size={18} />
                 </button>
               )}
             </button>

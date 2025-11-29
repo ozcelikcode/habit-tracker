@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface TimePickerProps {
   value: string; // "HH:MM" format
@@ -11,6 +11,8 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
   const [hours, setHours] = useState(9);
   const [minutes, setMinutes] = useState(0);
   const [selectingHours, setSelectingHours] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const clockRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (value) {
@@ -26,8 +28,81 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
     onClose();
   };
 
-  // Dakika seçenekleri
+  // Dakika seçenekleri (5'er 5'er)
   const minuteNumbers = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+  // Saat için açı hesapla (12 saatlik kadran, 0-11 ve 12-23)
+  const getHourAngle = (hour: number) => {
+    const h = hour % 12;
+    return (h * 30) - 90;
+  };
+
+  // Dakika için açı hesapla (5'lik artışlar için)
+  const getMinuteAngle = (minute: number) => {
+    // Dakikayı 5'in katına yuvarla ve index'e çevir
+    const index = minuteNumbers.indexOf(minute);
+    if (index !== -1) {
+      return (index * 30) - 90;
+    }
+    // Eğer listede yoksa, en yakın 5'in katına yuvarla
+    const rounded = Math.round(minute / 5) * 5;
+    const roundedIndex = minuteNumbers.indexOf(rounded % 60);
+    return (roundedIndex * 30) - 90;
+  };
+
+  // Açıdan değer hesapla (sürükleme için)
+  const getValueFromAngle = useCallback((clientX: number, clientY: number) => {
+    if (!clockRef.current) return;
+
+    const rect = clockRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Açıyı hesapla (derece cinsinden, 12 saat yönünde)
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+    if (angle < 0) angle += 360;
+
+    if (selectingHours) {
+      // Saat seçimi
+      const hourIndex = Math.round(angle / 30) % 12;
+      // İç halka mı dış halka mı kontrol et (mesafeye göre)
+      // İç ve dış halka arasındaki sınır: (65 + 100) / 2 = ~82.5
+      const isInnerRing = distance < 82;
+      const newHour = isInnerRing ? (hourIndex === 0 ? 12 : hourIndex + 12) : hourIndex;
+      setHours(newHour);
+    } else {
+      // Dakika seçimi (5'er 5'er)
+      const minuteIndex = Math.round(angle / 30) % 12;
+      setMinutes(minuteNumbers[minuteIndex]);
+    }
+  }, [selectingHours, minuteNumbers]);
+
+  // Mouse/Touch event handlers
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    getValueFromAngle(e.clientX, e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    getValueFromAngle(e.clientX, e.clientY);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (isDragging) {
+      setIsDragging(false);
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      // Saat seçildikten sonra dakikaya geç
+      if (selectingHours) {
+        setTimeout(() => setSelectingHours(false), 200);
+      }
+    }
+  };
 
   const handleClockClick = (num: number) => {
     if (selectingHours) {
@@ -38,20 +113,14 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
     }
   };
 
-  // Saat için açı hesapla (12 saatlik kadran, 0-11 ve 12-23)
-  const getHourAngle = (hour: number) => {
-    const h = hour % 12;
-    return (h * 30) - 90;
-  };
-
-  // Dakika için açı hesapla
-  const getMinuteAngle = (minute: number) => {
-    return (minute / 60) * 360 - 90;
-  };
-
   const selectedAngle = selectingHours 
     ? getHourAngle(hours)
     : getMinuteAngle(minutes);
+  
+  // Kol uzunluğu (buton pozisyonlarıyla eşleşmeli)
+  const outerRadius = 100; // Dış halka (0-11 saat, dakikalar)
+  const innerRadius = 65;  // İç halka (12-23 saat)
+  const handLength = selectingHours ? (hours >= 12 ? innerRadius : outerRadius) : outerRadius;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -87,30 +156,37 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
         </div>
 
         {/* Clock Face */}
-        <div className="relative w-[260px] h-[260px] mx-auto mb-6">
+        <div 
+          ref={clockRef}
+          className="relative w-[260px] h-[260px] mx-auto mb-6 touch-none select-none"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+        >
           {/* Clock background */}
-          <div className="absolute inset-0 rounded-full bg-gray-100 dark:bg-gray-700" />
+          <div className="absolute inset-0 rounded-full bg-gray-100 dark:bg-gray-700 cursor-pointer" />
           
           {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-primary rounded-full -translate-x-1/2 -translate-y-1/2 z-20" />
+          <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-primary rounded-full -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none" />
           
           {/* Clock hand */}
           <div 
-            className="absolute top-1/2 left-1/2 origin-left h-0.5 bg-primary z-10"
+            className="absolute top-1/2 left-1/2 origin-left h-0.5 bg-primary z-10 pointer-events-none"
             style={{
-              width: selectingHours ? (hours >= 12 ? '60px' : '85px') : '85px',
+              width: `${handLength}px`,
               transform: `rotate(${selectedAngle}deg)`,
               transformOrigin: '0 50%',
             }}
           />
           
-          {/* Selected indicator dot */}
+          {/* Selected indicator dot (draggable) */}
           <div 
-            className="absolute w-10 h-10 bg-primary rounded-full z-10 flex items-center justify-center"
+            className="absolute w-10 h-10 bg-primary rounded-full z-30 flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-none"
             style={{
               top: '50%',
               left: '50%',
-              transform: `translate(-50%, -50%) rotate(${selectedAngle}deg) translateX(${selectingHours ? (hours >= 12 ? 60 : 85) : 85}px) rotate(${-selectedAngle}deg)`,
+              transform: `translate(-50%, -50%) rotate(${selectedAngle}deg) translateX(${handLength}px) rotate(${-selectedAngle}deg)`,
             }}
           >
             <span className="text-white text-sm font-medium">
@@ -134,7 +210,7 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
                     style={{
                       top: '50%',
                       left: '50%',
-                      transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(100px) rotate(${-angle}deg)`,
+                      transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(${outerRadius}px) rotate(${-angle}deg)`,
                     }}
                   >
                     {num === 0 ? '00' : num}
@@ -155,7 +231,7 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
                     style={{
                       top: '50%',
                       left: '50%',
-                      transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(65px) rotate(${-angle}deg)`,
+                      transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(${innerRadius}px) rotate(${-angle}deg)`,
                     }}
                   >
                     {num}
@@ -178,7 +254,7 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
                   style={{
                     top: '50%',
                     left: '50%',
-                    transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(100px) rotate(${-angle}deg)`,
+                    transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(${outerRadius}px) rotate(${-angle}deg)`,
                   }}
                 >
                   {num.toString().padStart(2, '0')}

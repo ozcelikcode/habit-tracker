@@ -30,7 +30,7 @@ export default function Header({ theme }: HeaderProps) {
               />
             </svg>
           </div>
-          <h2 className={`text-lg font-bold leading-tight tracking-[-0.015em] hidden sm:block ${isDark ? 'text-white' : 'text-gray-800'}`}>HabitTracker</h2>
+          <h2 className={`text-lg font-bold leading-tight tracking-[-0.015em] hidden sm:block ${isDark ? 'text-white' : 'text-gray-800'}`}>Habity</h2>
         </NavLink>
 
         {/* Desktop Navigation */}

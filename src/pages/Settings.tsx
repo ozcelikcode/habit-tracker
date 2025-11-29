@@ -161,10 +161,10 @@ export default function Settings() {
           <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Hakkında</h3>
           <div className="space-y-2 text-gray-600 dark:text-white/60">
             <p>
-              <span className="text-gray-800 dark:text-white/80">Versiyon:</span> 1.0.0
+              <span className="text-gray-800 dark:text-white/80">Versiyon:</span> 1.0.4
             </p>
             <p>
-              <span className="text-gray-800 dark:text-white/80">Geliştirici:</span> HabitTracker Team
+              <span className="text-gray-800 dark:text-white/80">Geliştirici:</span> ozcelik & Claude Opus 4.5
             </p>
           </div>
         </div>

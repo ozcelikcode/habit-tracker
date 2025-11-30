@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2 } from 'lucide-react';
-import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates } from '../api';
+import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2, X } from 'lucide-react';
+import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates, getNoteByDate } from '../api';
 import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
 import ContributionCalendar from '../components/ContributionCalendar';
@@ -18,9 +18,26 @@ export default function Home() {
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteDates, setNoteDates] = useState<string[]>([]);
+  const [selectedDay, setSelectedDay] = useState<{
+    date: string;
+    count: number;
+    hasNote: boolean;
+    noteContent: string;
+    loading: boolean;
+  } | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
   const currentYear = new Date().getFullYear();
+
+  const formatDateTR = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
 
   useEffect(() => {
     loadData();
@@ -93,6 +110,36 @@ export default function Home() {
   };
 
   const todaysHabits = habits.filter(shouldShowHabit);
+
+  async function handleDayClick(info: { date: string; count: number; hasNote: boolean }) {
+    const { date, count, hasNote } = info;
+
+    // İlk anda paneli göster
+    setSelectedDay({
+      date,
+      count,
+      hasNote,
+      noteContent: '',
+      loading: true,
+    });
+
+    try {
+      const note = await getNoteByDate(date);
+      setSelectedDay((prev) => {
+        if (!prev || prev.date !== date) return prev;
+        const content = (note?.content || '').trim();
+        return {
+          ...prev,
+          hasNote: !!content,
+          noteContent: content,
+          loading: false,
+        };
+      });
+    } catch (error) {
+      console.error('Gün notu yüklenemedi:', error);
+      setSelectedDay((prev) => (prev && prev.date === date ? { ...prev, loading: false } : prev));
+    }
+  }
 
   async function handleSaveNote() {
     if (noteSaving) return;
@@ -176,7 +223,49 @@ export default function Home() {
             Bu takvim, son bir yıldaki alışkanlık tamamlama ilerlemenizi gösterir. Renk tonları, o günkü tamamlama
             oranını temsil eder.
           </p>
-          <ContributionCalendar data={calendarData} totalHabits={totalHabits} year={currentYear} noteDates={noteDates} />
+          <ContributionCalendar
+            data={calendarData}
+            totalHabits={totalHabits}
+            year={currentYear}
+            noteDates={noteDates}
+            onDayClick={handleDayClick}
+          />
+
+          {/* Seçili Gün Bilgisi */}
+          {selectedDay && (
+            <div className="mt-4 mx-4 mb-2 rounded-xl border border-gray-200 dark:border-[#32675a] bg-white/90 dark:bg-black/40 p-4 max-w-xl">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-white/40">
+                    Seçili Gün
+                  </p>
+                  <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mt-0.5">
+                    {formatDateTR(selectedDay.date)}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60 mt-1">
+                    {selectedDay.count}/{totalHabits} görev tamamlandı
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className="text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white rounded-full p-1 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="mt-3 flex items-start gap-2 text-xs sm:text-sm text-gray-700 dark:text-white/70">
+                <StickyNote size={16} className="mt-0.5 flex-shrink-0 text-amber-400" />
+                {selectedDay.loading ? (
+                  <span>Not yükleniyor...</span>
+                ) : selectedDay.hasNote && selectedDay.noteContent ? (
+                  <p className="whitespace-pre-wrap break-words">{selectedDay.noteContent}</p>
+                ) : (
+                  <span>Bu gün için kayıtlı bir not bulunmuyor.</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}

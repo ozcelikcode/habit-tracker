@@ -115,6 +115,12 @@ export async function getTodayNote(): Promise<DailyNote> {
   return res.json();
 }
 
+export async function getNoteByDate(date: string): Promise<DailyNote> {
+  const res = await fetch(`${API_BASE}/notes/${date}`);
+  if (!res.ok) throw new Error('Not getirilemedi');
+  return res.json();
+}
+
 export async function getNoteDates(year: number): Promise<{ note_date: string }[]> {
   const res = await fetch(`${API_BASE}/notes?year=${year}`);
   if (!res.ok) throw new Error('Not tarihleri getirilemedi');

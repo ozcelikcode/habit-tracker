@@ -6,6 +6,7 @@ interface CalendarProps {
   totalHabits: number;
   year: number;
   noteDates?: string[];
+  onDayClick?: (info: { date: string; count: number; hasNote: boolean }) => void;
 }
 
 const formatDate = (date: Date) => {
@@ -15,7 +16,7 @@ const formatDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-export default function ContributionCalendar({ data, totalHabits, year, noteDates = [] }: CalendarProps) {
+export default function ContributionCalendar({ data, totalHabits, year, noteDates = [], onDayClick }: CalendarProps) {
   const noteDatesSet = useMemo(() => new Set(noteDates), [noteDates]);
   const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
@@ -156,7 +157,19 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
                   onMouseLeave={() => setHoveredCell(null)}
                   onClick={() => {
                     if (cell.date) {
-                      setHoveredCell(hoveredCell?.date === cell.date ? null : { date: cell.date, count: cell.count, x: 0, y: 0 });
+                      // Tooltip için seçili hücreyi sabitle
+                      setHoveredCell(
+                        hoveredCell?.date === cell.date
+                          ? null
+                          : { date: cell.date, count: cell.count, x: 0, y: 0 }
+                      );
+
+                      // Parent bileşene tıklanan günü bildir
+                      onDayClick?.({
+                        date: cell.date,
+                        count: cell.count,
+                        hasNote: noteDatesSet.has(cell.date),
+                      });
                     }
                   }}
                 >

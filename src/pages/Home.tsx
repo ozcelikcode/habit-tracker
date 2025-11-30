@@ -28,14 +28,36 @@ export default function Home() {
 
   async function loadData() {
     try {
+      // Her bir isteği ayrı ayrı catch bloğu ile sarmalayarak birinin hatasının diğerlerini etkilemesini engelliyoruz
       const [habitsData, completionsData, statsData, calendarRes, settingsData, noteData, noteDatesData] = await Promise.all([
-        getHabits(),
-        getCompletions({ start_date: today, end_date: today }),
-        getStats(),
-        getCalendarData(currentYear),
-        getSettings(),
-        getTodayNote(),
-        getNoteDates(currentYear),
+        getHabits().catch(e => {
+          console.error('Alışkanlıklar yüklenemedi:', e);
+          return [];
+        }),
+        getCompletions({ start_date: today, end_date: today }).catch(e => {
+          console.error('Tamamlamalar yüklenemedi:', e);
+          return [];
+        }),
+        getStats().catch(e => {
+          console.error('İstatistikler yüklenemedi:', e);
+          return { totalCompleted: 0, currentStreak: 0, longestStreak: 0 };
+        }),
+        getCalendarData(currentYear).catch(e => {
+          console.error('Takvim verisi yüklenemedi:', e);
+          return { data: [], totalHabits: 0 };
+        }),
+        getSettings().catch(e => {
+          console.error('Ayarlar yüklenemedi:', e);
+          return { username: 'Kullanıcı', theme: 'dark' as 'dark' | 'light' };
+        }),
+        getTodayNote().catch(e => {
+          console.error('Not yüklenemedi:', e);
+          return { note_date: today, content: '' };
+        }),
+        getNoteDates(currentYear).catch(e => {
+          console.error('Not tarihleri yüklenemedi:', e);
+          return [];
+        }),
       ]);
 
       setHabits(habitsData);
@@ -45,13 +67,32 @@ export default function Home() {
       setTotalHabits(calendarRes.totalHabits);
       setSettings(settingsData);
       setDailyNote(noteData);
-      setNoteDates(noteDatesData.map(n => n.note_date));
+      setNoteDates(noteDatesData.map((n: any) => n.note_date));
     } catch (error) {
-      console.error('Veri yüklenirken hata:', error);
+      console.error('Genel veri yükleme hatası:', error);
     } finally {
       setLoading(false);
     }
   }
+
+  // Alışkanlığın bugün gösterilip gösterilmeyeceğini belirle
+  const shouldShowHabit = (habit: Habit) => {
+    const todayDay = new Date().getDay(); // 0 = Pazar, 1 = Pazartesi, ...
+    
+    if (habit.frequency === 'daily') return true;
+    if (habit.frequency === 'weekdays') return todayDay !== 0 && todayDay !== 6;
+    if (habit.frequency === 'custom' && habit.custom_days) {
+      try {
+        const days = JSON.parse(habit.custom_days);
+        return Array.isArray(days) && days.includes(todayDay);
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  };
+
+  const todaysHabits = habits.filter(shouldShowHabit);
 
   async function handleSaveNote() {
     if (noteSaving) return;
@@ -167,15 +208,23 @@ export default function Home() {
               Bugünün Görevleri
             </h2>
             <div className="flex flex-col gap-3 p-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
-              {habits.length === 0 ? (
-                <p className="text-gray-500 dark:text-white/50 text-center py-4">
-                  Henüz alışkanlık eklemediniz.{' '}
-                  <Link to="/habits/new" className="text-primary hover:underline">
-                    Yeni ekle
-                  </Link>
-                </p>
+              {todaysHabits.length === 0 ? (
+                <div className="text-center py-8">
+                  {habits.length === 0 ? (
+                    <p className="text-gray-500 dark:text-white/50">
+                      Henüz alışkanlık eklemediniz.{' '}
+                      <Link to="/habits/new" className="text-primary hover:underline">
+                        Yeni ekle
+                      </Link>
+                    </p>
+                  ) : (
+                    <p className="text-gray-500 dark:text-white/50">
+                      Bugün için planlanmış görev bulunmuyor.
+                    </p>
+                  )}
+                </div>
               ) : (
-                habits.map((habit) => {
+                todaysHabits.map((habit) => {
                   const isCompleted = completions.some((c) => c.habit_id === habit.id);
                   
                   const formatDuration = (mins: number) => {

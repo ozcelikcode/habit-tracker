@@ -8,6 +8,13 @@ interface CalendarProps {
   noteDates?: string[];
 }
 
+const formatDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function ContributionCalendar({ data, totalHabits, year, noteDates = [] }: CalendarProps) {
   const noteDatesSet = useMemo(() => new Set(noteDates), [noteDates]);
   const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
@@ -27,7 +34,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
     // Her gün için hücre oluştur
     const current = new Date(startDate);
     while (current <= endDate) {
-      const dateStr = current.toISOString().split('T')[0];
+      const dateStr = formatDate(current);
       const count = dataMap.get(dateStr) || 0;
 
       // Seviye hesapla (0-4)
@@ -193,7 +200,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
           {noteDatesSet.has(hoveredCell.date) && (
             <div className="flex items-center gap-1 text-amber-400 mt-1">
               <StickyNote size={12} />
-              <span>Not var</span>
+              <span>1 not bırakıldı</span>
             </div>
           )}
         </div>

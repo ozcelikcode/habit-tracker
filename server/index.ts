@@ -296,17 +296,19 @@ app.get('/api/notes/:date', (req, res) => {
 app.get('/api/notes', (req, res) => {
   try {
     const { year } = req.query;
-    let query = 'SELECT note_date FROM daily_notes WHERE content != ""';
+    // Boş olmayan içeriklere sahip notların tarihlerini döndür
+    let query = "SELECT note_date FROM daily_notes WHERE content IS NOT NULL AND TRIM(content) != ''";
     const params: any[] = [];
-    
+
     if (year) {
       query += ' AND note_date >= ? AND note_date <= ?';
       params.push(`${year}-01-01`, `${year}-12-31`);
     }
-    
+
     const notes = db.prepare(query).all(...params);
     res.json(notes);
   } catch (error) {
+    console.error('Notes query error:', error);
     res.status(500).json({ error: 'Notlar getirilemedi' });
   }
 });
@@ -316,7 +318,7 @@ app.post('/api/notes', (req, res) => {
   try {
     const { content } = req.body;
     const today = new Date().toISOString().split('T')[0];
-    
+
     if (content && content.trim()) {
       db.prepare(`
         INSERT INTO daily_notes (note_date, content) VALUES (?, ?)
@@ -326,7 +328,7 @@ app.post('/api/notes', (req, res) => {
       // İçerik boşsa notu sil
       db.prepare('DELETE FROM daily_notes WHERE note_date = ?').run(today);
     }
-    
+
     res.json({ success: true, note_date: today, content: content?.trim() || '' });
   } catch (error) {
     res.status(500).json({ error: 'Not kaydedilemedi' });

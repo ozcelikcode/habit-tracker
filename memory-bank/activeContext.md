@@ -23,6 +23,16 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda.
 - Vurgu rengi seçimi eklendi (8 renk)
 - Renk CSS değişkeni olarak kaydediliyor
 
+### Ikon Sistemi
+- Google Material Symbols yerine Lucide React ikon kütüphanesi kullanılıyor
+- Daha modern ve tutarlı ikon seti
+
+### Günlük Notlar
+- Sadece bugün için not eklenebilir
+- Home sayfasında görevlerin altında yer alır
+- Takvimde not olan günler işaretlenir
+- Otomatik kaydetme özelliği
+
 ### Navbar
 - Tamamen yuvarlak tasarım
 - Mobil menü toggle
@@ -38,6 +48,7 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda.
 ### Veritabanı
 - SQLite dosya tabanlı
 - Migration ile yeni sütun ekleme
+- Yeni tablolar: `daily_notes`
 - Soft delete (archived flag)
 
 ## Dikkat Edilecek Noktalar

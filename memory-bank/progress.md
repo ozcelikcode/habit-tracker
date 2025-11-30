@@ -20,9 +20,11 @@
 
 ### Günlük Takip
 - [x] Bugünün görevleri listesi
+- [x] Görev filtreleme (Sadece bugüne ait olanlar)
 - [x] Checkbox ile tamamlama
 - [x] Anlık takvim güncellemesi
 - [x] Saat/süre etiketleri
+- [x] Günlük notlar (yeni)
 
 ### Contribution Takvimi
 - [x] GitHub tarzı yıllık görünüm
@@ -30,6 +32,7 @@
 - [x] Renk seviyeleri (5 kademe)
 - [x] Hover tooltip
 - [x] Mobil scroll desteği
+- [x] Not göstergesi (sarı nokta)
 
 ### İstatistikler
 - [x] Mevcut seri hesaplama
@@ -41,6 +44,7 @@
 - [x] Açık tema
 - [x] Tema geçişi
 - [x] Vurgu rengi seçimi (8 renk)
+- [x] Lucide Icons (Material Icons yerine)
 
 ### UI/UX
 - [x] Responsive navbar

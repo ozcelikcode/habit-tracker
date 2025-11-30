@@ -5,6 +5,9 @@ import Habits from './pages/Habits';
 import NewHabit from './pages/NewHabit';
 import EditHabit from './pages/EditHabit';
 import Settings from './pages/Settings';
+import Notes from './pages/Notes';
+import NewNote from './pages/NewNote';
+import ViewNote from './pages/ViewNote';
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
           <Route path="habits/new" element={<NewHabit />} />
           <Route path="habits/:id/edit" element={<EditHabit />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="notes" element={<Notes />} />
+          <Route path="notes/new" element={<NewNote />} />
+          <Route path="notes/:id" element={<ViewNote />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,17 +1,32 @@
 import { useEffect, useState } from 'react';
-import { Moon, Sun, Check } from 'lucide-react';
+import { Moon, Sun, Check, Bell, BellRing } from 'lucide-react';
 import { getSettings, updateSetting } from '../api';
 import type { Settings as SettingsType } from '../types';
+import { ensureServiceWorker, getNotificationStatus, requestNotificationPermission } from '../utils/notificationService';
 
 export default function Settings() {
   const [settings, setSettings] = useState<SettingsType>({ username: '', theme: 'dark' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [notificationStatus, setNotificationStatus] = useState<NotificationPermission | 'unsupported'>('default');
+  const [notificationLoading, setNotificationLoading] = useState(false);
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    setNotificationStatus(getNotificationStatus());
+    ensureServiceWorker();
+  }, []);
+
+  const notificationStatusText = (() => {
+    if (notificationStatus === 'granted') return 'Açık';
+    if (notificationStatus === 'denied') return 'Reddedildi';
+    if (notificationStatus === 'unsupported') return 'Desteklenmiyor';
+    return 'Beklemede';
+  })();
 
   async function loadSettings() {
     try {
@@ -21,6 +36,19 @@ export default function Settings() {
       console.error('Ayarlar yüklenirken hata:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleEnableNotifications() {
+    try {
+      setNotificationLoading(true);
+      const permission = await requestNotificationPermission();
+      setNotificationStatus(permission);
+      if (permission === 'granted') {
+        await ensureServiceWorker();
+      }
+    } finally {
+      setNotificationLoading(false);
     }
   }
 
@@ -148,6 +176,54 @@ export default function Settings() {
             <p className="text-gray-500 dark:text-white/40 text-xs mt-2">
               Seçilen renk butonlar ve vurgular için kullanılır.
             </p>
+          </div>
+        </div>
+
+        {/* Bildirimler */}
+        <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+          <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-2">Bildirimler</h3>
+          <p className="text-sm text-gray-600 dark:text-white/60 mb-3">
+            Planlanan saatlerde hatırlatma gönderebilmek için push bildirimi izni gerekir.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                notificationStatus === 'granted'
+                  ? 'bg-green-500/10 text-green-600 dark:text-green-300 border border-green-500/30'
+                  : notificationStatus === 'unsupported'
+                    ? 'bg-gray-500/10 text-gray-600 dark:text-white/60 border border-gray-500/20'
+                    : notificationStatus === 'denied'
+                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                      : 'bg-primary/10 text-primary border border-primary/20'
+              }`}
+            >
+              <Bell size={14} />
+              {notificationStatusText}
+            </span>
+
+            {notificationStatus === 'default' && (
+              <button
+                type="button"
+                onClick={handleEnableNotifications}
+                disabled={notificationLoading}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white dark:text-background-dark hover:opacity-90 disabled:opacity-60"
+              >
+                <BellRing size={16} />
+                {notificationLoading ? 'İzin isteniyor...' : 'Push bildirimlerini aç'}
+              </button>
+            )}
+
+            {notificationStatus === 'denied' && (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Tarayıcı ayarlarından bildirim izni vererek hatırlatmaları açabilirsiniz.
+              </p>
+            )}
+
+            {notificationStatus === 'unsupported' && (
+              <p className="text-xs text-gray-600 dark:text-white/60">
+                Tarayıcınız push bildirimlerini desteklemiyor.
+              </p>
+            )}
           </div>
         </div>
 

@@ -72,6 +72,18 @@ export default function Header({ theme }: HeaderProps) {
           >
             Ayarlar
           </NavLink>
+          <NavLink
+            to="/notes"
+            className={({ isActive }) =>
+              `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                isActive 
+                  ? 'bg-primary text-white' 
+                  : (isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100')
+              }`
+            }
+          >
+            Notlar
+          </NavLink>
         </nav>
 
         {/* Mobile menu button */}
@@ -125,6 +137,19 @@ export default function Header({ theme }: HeaderProps) {
             }
           >
             Ayarlar
+          </NavLink>
+          <NavLink
+            to="/notes"
+            onClick={() => setMobileMenuOpen(false)}
+            className={({ isActive }) =>
+              `px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                isActive 
+                  ? 'bg-primary text-white' 
+                  : (isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100')
+              }`
+            }
+          >
+            Notlar
           </NavLink>
         </nav>
       )}

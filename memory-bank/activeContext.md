@@ -1,9 +1,20 @@
 # HabitTracker - Aktif Bağlam
 
 ## Mevcut Çalışma Durumu
-Proje temel özellikleriyle tamamlandı ve çalışır durumda.
+Proje temel özellikleriyle tamamlandı ve çalışır durumda. Notlar sistemi yeniden yapılandırıldı.
 
 ## Son Yapılan Değişiklikler
+
+### Notlar Sistemi Yeniden Yapılandırması (30 Kasım 2025)
+- Notlar sayfası ikiye ayrıldı: `Notes.tsx` (liste) ve `NewNote.tsx` (ekleme)
+- Editor.js artık sadece `NewNote.tsx` içinde (tek instance)
+- Native `<select>` yerine custom dropdown bileşeni eklendi (site UI'ına uyumlu)
+- "İçerik yok" hatası düzeltildi - `extractPlainText` fonksiyonu iyileştirildi:
+  - HTML etiketlerini temizleme
+  - Liste itemlarını doğru okuma
+  - Quote/caption desteği eklendi
+- Not silme özelliği eklendi
+- Boş durum için güzel bir UI eklendi
 
 ### TimePicker Bileşeni
 - 24 saat formatına geçildi
@@ -40,6 +51,13 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda.
 
 ## Aktif Kararlar
 
+### Notlar Sistemi Mimarisi
+- `Notes.tsx`: Not listesi (DnD sıralama, silme)
+- `NewNote.tsx`: Not ekleme formu (Editor.js)
+- LocalStorage tabanlı depolama
+- Tema rengi seçimi (5 renk)
+- Kategoriler dinamik olarak eklenebilir
+
 ### Tema Sistemi
 - Tailwind `dark:` prefix kullanılıyor
 - `document.documentElement.classList` ile toggle
@@ -63,9 +81,15 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda.
 - Takvim `overflow-x-auto` ile mobil scroll
 - Grid'ler responsive (`grid-cols-1 sm:grid-cols-2`)
 
+### Editor.js Dikkat Noktaları
+- Tek instance kullanılmalı (çift editor sorunu çözüldü)
+- `editorInitialized` ref ile çoklu başlatma engelleniyor
+- `extractPlainText` HTML temizliği yapıyor
+
 ## Sonraki Adımlar (Potansiyel)
-1. Bildirim sistemi
-2. Haftalık/aylık görünüm
-3. Veri export/import
-4. PWA desteği
-5. Çoklu dil desteği
+1. Not düzenleme özelliği
+2. Not arama/filtreleme
+3. Haftalık/aylık görünüm
+4. Veri export/import
+5. PWA desteği
+6. Çoklu dil desteği

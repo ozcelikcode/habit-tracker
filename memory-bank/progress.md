@@ -24,7 +24,7 @@
 - [x] Checkbox ile tamamlama
 - [x] Anlık takvim güncellemesi
 - [x] Saat/süre etiketleri
-- [x] Günlük notlar (yeni)
+- [x] Günlük notlar
 
 ### Contribution Takvimi
 - [x] GitHub tarzı yıllık görünüm
@@ -53,11 +53,23 @@
 - [x] Hover efektleri
 - [x] Geçiş animasyonları
 
+### Notlar Sistemi (30 Kasım 2025 - Güncel)
+- [x] Notlar sayfası ayrı listeleme (`Notes.tsx`)
+- [x] Not ekleme ayrı sayfa (`NewNote.tsx`)
+- [x] Editor.js ile zengin metin düzenleme (tek instance)
+- [x] Kategori sistemi (custom dropdown UI)
+- [x] Tema rengi seçimi (5 renk)
+- [x] Sürükle-bırak sıralama (DnD Kit)
+- [x] Not silme özelliği
+- [x] İçerik çıkarımı düzeltildi (HTML temizleme)
+- [x] LocalStorage depolama
+
 ## 🔄 Bilinen Sorunlar
 - IDE'de `@tailwind` direktifi uyarısı (çalışmayı etkilemiyor)
 
 ## 📋 Gelecek Özellikler (Backlog)
-- [ ] Bildirim/hatırlatma sistemi
+- [ ] Not düzenleme özelliği
+- [ ] Not arama/filtreleme
 - [ ] Haftalık görünüm
 - [ ] Aylık görünüm
 - [ ] Veri export (JSON/CSV)
@@ -75,7 +87,14 @@
 
 ## 🗓️ Versiyon Geçmişi
 
-### v1.0.0 (Mevcut)
+### v1.1.0 (30 Kasım 2025)
+- Notlar sistemi yeniden yapılandırıldı
+- Not ekleme ayrı sayfaya taşındı
+- Custom dropdown UI (select yerine)
+- İçerik çıkarımı hatası düzeltildi
+- Not silme özelliği eklendi
+
+### v1.0.0
 - Temel alışkanlık takip özellikleri
 - Contribution takvimi
 - Tema desteği

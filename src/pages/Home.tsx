@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2, X } from 'lucide-react';
+import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2, X, Bell, BellRing } from 'lucide-react';
 import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates, getNoteByDate } from '../api';
 import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
 import ContributionCalendar from '../components/ContributionCalendar';
 import { HABIT_ICON_MAP } from '../icons/habitIcons';
+import { ensureServiceWorker, getNotificationStatus, requestNotificationPermission, showHabitNotification } from '../utils/notificationService';
 
 export default function Home() {
+  const today = new Date().toISOString().split('T')[0];
+  const currentYear = new Date().getFullYear();
+
   const [habits, setHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState<Completion[]>([]);
   const [stats, setStats] = useState<Stats>({ totalCompleted: 0, currentStreak: 0, longestStreak: 0 });
@@ -26,9 +30,25 @@ export default function Home() {
     noteContent: string;
     loading: boolean;
   } | null>(null);
-
-  const today = new Date().toISOString().split('T')[0];
-  const currentYear = new Date().getFullYear();
+  const [notificationStatus, setNotificationStatus] = useState<NotificationPermission | 'unsupported'>('default');
+  const [notificationLoading, setNotificationLoading] = useState(false);
+  const [notifiedHabits, setNotifiedHabits] = useState<{ date: string; ids: number[] }>(() => {
+    if (typeof window === 'undefined') {
+      return { date: today, ids: [] };
+    }
+    try {
+      const stored = localStorage.getItem('habit-notified');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.date === today && Array.isArray(parsed.ids)) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.warn('Bildirim kaydı okunamadı:', error);
+    }
+    return { date: today, ids: [] };
+  });
 
   const formatDateTR = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -40,9 +60,42 @@ export default function Home() {
     });
   };
 
+  const formatDuration = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h > 0 && m > 0) return `${h}sa ${m}dk`;
+    if (h > 0) return `${h}sa`;
+    return `${m}dk`;
+  };
+
+  const getFrequencyLabel = (frequency: string) => {
+    return FREQUENCY_OPTIONS.find((f) => f.value === frequency)?.label || frequency;
+  };
+
+  const getCustomDaysLabel = (customDays: string | null) => {
+    if (!customDays) return '';
+    try {
+      const days: number[] = JSON.parse(customDays);
+      return days.map((d) => WEEKDAYS.find((w) => w.value === d)?.label).filter(Boolean).join(', ');
+    } catch {
+      return '';
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setNotificationStatus(getNotificationStatus());
+    ensureServiceWorker();
+  }, []);
+
+  useEffect(() => {
+    if (notifiedHabits.date !== today) {
+      setNotifiedHabits({ date: today, ids: [] });
+    }
+  }, [today, notifiedHabits.date]);
 
   async function loadData() {
     try {
@@ -111,6 +164,71 @@ export default function Home() {
   };
 
   const todaysHabits = habits.filter(shouldShowHabit);
+  const completedHabitIds = useMemo(() => new Set(completions.map((c) => c.habit_id)), [completions]);
+
+  const persistNotifiedState = (next: { date: string; ids: number[] }) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('habit-notified', JSON.stringify(next));
+    }
+  };
+
+  async function handleEnableNotifications() {
+    try {
+      setNotificationLoading(true);
+      const permission = await requestNotificationPermission();
+      setNotificationStatus(permission);
+      if (permission === 'granted') {
+        await ensureServiceWorker();
+      }
+    } finally {
+      setNotificationLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (notificationStatus !== 'granted') return;
+
+    const toleranceMinutes = 5; // saate girdikten sonra 5 dk icinde hatirlat
+
+    const checkAndNotify = () => {
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+      todaysHabits.forEach((habit) => {
+        if (!habit.scheduled_time) return;
+        if (notifiedHabits.date === today && notifiedHabits.ids.includes(habit.id)) return;
+        if (completedHabitIds.has(habit.id)) return;
+
+        const [h, m] = habit.scheduled_time.split(':').map(Number);
+        if (Number.isNaN(h) || Number.isNaN(m)) return;
+        const habitMinutes = h * 60 + m;
+        const diff = nowMinutes - habitMinutes;
+
+        if (diff < 0 || diff > toleranceMinutes) return;
+
+        const durationText = habit.duration_minutes ? ` (~${formatDuration(habit.duration_minutes)})` : '';
+        showHabitNotification('Hatırlatma', {
+          body: `${habit.title} için planlanan saat geldi${durationText}.`,
+          tag: `habit-${habit.id}-${today}`,
+          icon: '/vite.svg',
+          badge: '/vite.svg',
+        });
+
+        setNotifiedHabits((prev) => {
+          const next = prev.date === today
+            ? { ...prev, ids: [...prev.ids, habit.id] }
+            : { date: today, ids: [habit.id] };
+          persistNotifiedState(next);
+          return next;
+        });
+      });
+    };
+
+    const interval = window.setInterval(checkAndNotify, 60 * 1000);
+    checkAndNotify();
+
+    return () => clearInterval(interval);
+  }, [notificationStatus, todaysHabits, completedHabitIds, notifiedHabits, today]);
 
   async function handleDayClick(info: { date: string; count: number; hasNote: boolean }) {
     const { date, count, hasNote } = info;
@@ -212,6 +330,38 @@ export default function Home() {
           Yeni Alışkanlık Ekle
         </Link>
       </div>
+
+      {/* Notification CTA */}
+      {notificationStatus === 'default' && (
+        <div className="px-4">
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-gray-200 dark:border-[#32675a] bg-white/80 dark:bg-white/5 p-4 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Bell size={18} />
+            </div>
+            <div className="flex-1">
+              <p className="text-gray-800 dark:text-white font-semibold text-sm">Hatirlatma bildirimleri</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60 mt-1">
+                Planlanan saatlerde cihaz bildirimi gönderebilmemiz için tarayıcı izni vermelisin.
+              </p>
+              <button
+                onClick={handleEnableNotifications}
+                disabled={notificationLoading}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white dark:text-background-dark hover:opacity-90 disabled:opacity-60"
+              >
+                <BellRing size={16} />
+                {notificationLoading ? 'İzin isteniyor...' : 'Bildirimi aç'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {notificationStatus === 'unsupported' && (
+        <div className="px-4">
+          <div className="mb-4 rounded-xl border border-gray-200 dark:border-[#32675a] bg-white/70 dark:bg-white/5 p-4 text-sm text-gray-600 dark:text-white/60">
+            Tarayıcınız bildirimleri desteklemiyor, ancak hatırlatmalar uygulama içinde gösterilecek.
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row gap-8 mt-6 p-4">
@@ -315,29 +465,7 @@ export default function Home() {
                 </div>
               ) : (
                 todaysHabits.map((habit) => {
-                  const isCompleted = completions.some((c) => c.habit_id === habit.id);
-                  
-                  const formatDuration = (mins: number) => {
-                    const h = Math.floor(mins / 60);
-                    const m = mins % 60;
-                    if (h > 0 && m > 0) return `${h}sa ${m}dk`;
-                    if (h > 0) return `${h}sa`;
-                    return `${m}dk`;
-                  };
-
-                  const getFrequencyLabel = (frequency: string) => {
-                    return FREQUENCY_OPTIONS.find((f) => f.value === frequency)?.label || frequency;
-                  };
-
-                  const getCustomDaysLabel = (customDays: string | null) => {
-                    if (!customDays) return '';
-                    try {
-                      const days: number[] = JSON.parse(customDays);
-                      return days.map(d => WEEKDAYS.find(w => w.value === d)?.label).filter(Boolean).join(', ');
-                    } catch {
-                      return '';
-                    }
-                  };
+                  const isCompleted = completedHabitIds.has(habit.id);
 
                   return (
                     <div

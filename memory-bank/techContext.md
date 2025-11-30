@@ -34,7 +34,9 @@ habit-tracker/
 │   │   ├── Habits.tsx          # Alışkanlık listesi
 │   │   ├── NewHabit.tsx        # Yeni alışkanlık formu
 │   │   ├── EditHabit.tsx       # Düzenleme formu
-│   │   └── Settings.tsx        # Ayarlar sayfası
+│   │   ├── Settings.tsx        # Ayarlar sayfası
+│   │   ├── Notes.tsx           # Notlar listesi (DnD sıralama)
+│   │   └── NewNote.tsx         # Not ekleme (Editor.js)
 │   ├── api/
 │   │   └── index.ts            # API fonksiyonları
 │   ├── types/

@@ -38,20 +38,21 @@ app.get('/api/habits/:id', (req, res) => {
 // Yeni alışkanlık oluştur
 app.post('/api/habits', (req, res) => {
   try {
-    const { title, subtitle, color, frequency, custom_days, scheduled_time, duration_minutes } = req.body;
+    const { title, subtitle, color, icon, frequency, custom_days, scheduled_time, duration_minutes } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: 'Başlık gerekli' });
     }
 
     const result = db.prepare(`
-      INSERT INTO habits (title, subtitle, color, frequency, custom_days, scheduled_time, duration_minutes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO habits (title, subtitle, color, icon, frequency, custom_days, scheduled_time, duration_minutes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      title, 
-      subtitle || null, 
-      color || '#2EAC8A', 
-      frequency || 'daily', 
+      title,
+      subtitle || null,
+      color || '#2EAC8A',
+      icon || null,
+      frequency || 'daily',
       custom_days ? JSON.stringify(custom_days) : null,
       scheduled_time || null,
       duration_minutes || null
@@ -67,13 +68,14 @@ app.post('/api/habits', (req, res) => {
 // Alışkanlık güncelle
 app.put('/api/habits/:id', (req, res) => {
   try {
-    const { title, subtitle, color, frequency, custom_days, scheduled_time, duration_minutes } = req.body;
+    const { title, subtitle, color, icon, frequency, custom_days, scheduled_time, duration_minutes } = req.body;
     
     db.prepare(`
       UPDATE habits 
       SET title = COALESCE(?, title),
           subtitle = COALESCE(?, subtitle),
           color = COALESCE(?, color),
+          icon = COALESCE(?, icon),
           frequency = COALESCE(?, frequency),
           custom_days = COALESCE(?, custom_days),
           scheduled_time = ?,
@@ -81,11 +83,12 @@ app.put('/api/habits/:id', (req, res) => {
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
-      title, 
-      subtitle, 
-      color, 
-      frequency, 
-      custom_days ? JSON.stringify(custom_days) : null, 
+      title,
+      subtitle,
+      color,
+      icon,
+      frequency,
+      custom_days ? JSON.stringify(custom_days) : null,
       scheduled_time !== undefined ? scheduled_time : null,
       duration_minutes !== undefined ? duration_minutes : null,
       req.params.id

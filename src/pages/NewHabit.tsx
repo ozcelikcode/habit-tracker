@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, Timer, X } from 'lucide-react';
 import { createHabit } from '../api';
 import { HABIT_COLORS, FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
+import { HABIT_ICONS, type HabitIconId } from '../icons/habitIcons';
 import TimePicker from '../components/TimePicker';
 import DurationPicker from '../components/DurationPicker';
 
@@ -14,6 +15,7 @@ export default function NewHabit() {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [color, setColor] = useState(HABIT_COLORS[0].value);
+  const [icon, setIcon] = useState<HabitIconId | null>(null);
   const [frequency, setFrequency] = useState<'daily' | 'weekdays' | 'custom'>('daily');
   const [customDays, setCustomDays] = useState<number[]>([]);
   const [scheduledTime, setScheduledTime] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export default function NewHabit() {
         title: title.trim(),
         subtitle: subtitle.trim() || undefined,
         color,
+        icon: icon || undefined,
         frequency,
         custom_days: frequency === 'custom' ? JSON.stringify(customDays) : undefined,
         scheduled_time: scheduledTime || undefined,
@@ -107,6 +110,37 @@ export default function NewHabit() {
                 title={c.name}
               />
             ))}
+          </div>
+        </div>
+
+        {/* İkon Seçimi */}
+        <div>
+          <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">İkon (Opsiyonel)</label>
+          <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
+            Alışkanlığınızı en iyi temsil eden bir ikon seçin.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {HABIT_ICONS.map((opt) => {
+              const SelectedIcon = opt.Icon;
+              const isSelected = icon === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setIcon(isSelected ? null : opt.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs sm:text-sm transition-all min-w-[120px] justify-start ${
+                    isSelected
+                      ? 'bg-primary text-white dark:text-background-dark border-primary shadow-sm'
+                      : 'bg-gray-100 dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-700 dark:text-white/70 hover:border-primary/60'
+                  }`}
+                >
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/80 dark:bg-black/40">
+                    <SelectedIcon size={16} />
+                  </span>
+                  <span className="line-clamp-1 text-left">{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

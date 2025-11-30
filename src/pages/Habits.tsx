@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Repeat, CalendarDays, Clock, Timer, ClipboardList
 import { getHabits, deleteHabit } from '../api';
 import type { Habit } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
+import { HABIT_ICON_MAP } from '../icons/habitIcons';
 
 export default function Habits() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -123,7 +124,17 @@ export default function Habits() {
                 </div>
               </div>
 
-              <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-1">{habit.title}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                {habit.icon && HABIT_ICON_MAP[habit.icon] && (
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 dark:bg-black/40 text-gray-800 dark:text-white">
+                    {(() => {
+                      const IconComp = HABIT_ICON_MAP[habit.icon];
+                      return <IconComp size={18} />;
+                    })()}
+                  </span>
+                )}
+                <h3 className="text-gray-800 dark:text-white text-lg font-semibold">{habit.title}</h3>
+              </div>
               {habit.subtitle && <p className="text-gray-500 dark:text-white/50 text-sm mb-2">{habit.subtitle}</p>}
 
               {/* Detay Bilgileri */}

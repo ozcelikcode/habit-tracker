@@ -3,6 +3,7 @@ export interface Habit {
   title: string;
   subtitle: string | null;
   color: string;
+  icon: string | null;
   frequency: 'daily' | 'weekdays' | 'custom';
   custom_days: string | null; // JSON string of number array
   scheduled_time: string | null; // "HH:MM" format - ne zaman çalışacak

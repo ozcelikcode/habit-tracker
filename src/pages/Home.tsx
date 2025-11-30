@@ -5,6 +5,7 @@ import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, un
 import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
 import ContributionCalendar from '../components/ContributionCalendar';
+import { HABIT_ICON_MAP } from '../icons/habitIcons';
 
 export default function Home() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -361,6 +362,14 @@ export default function Home() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
+                          {habit.icon && HABIT_ICON_MAP[habit.icon] && (
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/90 dark:bg-black/40 text-gray-800 dark:text-white">
+                              {(() => {
+                                const IconComp = HABIT_ICON_MAP[habit.icon];
+                                return <IconComp size={16} />;
+                              })()}
+                            </span>
+                          )}
                           <span
                             className={`font-medium ${isCompleted ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-800 dark:text-white'}`}
                           >

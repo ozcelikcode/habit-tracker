@@ -8,11 +8,22 @@
 - **Layout**: Header + içerik wrapper pattern
 
 ### State Yönetimi
+- **Context API**: `PomodoroContext` ile global timer yönetimi.
 - **useState**: Lokal component state
 - **useEffect**: Side effects ve data fetching
 - **Props drilling**: Tema bilgisi Layout → Header
 
 ## Tasarım Desenleri
+
+### Persistent Footer Pattern
+```tsx
+// Layout.tsx
+<PomodoroProvider>
+  <Header />
+  <Outlet />
+  <PomodoroFooter /> // Sabit pozisyonlu global bileşen
+</PomodoroProvider>
+```
 
 ### Tema Sistemi
 ```tsx

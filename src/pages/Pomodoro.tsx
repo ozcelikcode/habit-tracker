@@ -1,157 +1,43 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Play, Pause, RotateCcw, Clock, CheckCircle2, Circle } from 'lucide-react';
-import { getHabits, getCompletions, completeHabit, uncompleteHabit, getHabitProgress, updateHabitProgress } from '../api';
+import { getCompletions, completeHabit, uncompleteHabit } from '../api';
 import type { Habit, Completion } from '../types';
 import { HABIT_ICON_MAP } from '../icons/habitIcons';
+import { usePomodoro } from '../context/PomodoroContext';
 
 export default function Pomodoro() {
-  // Timer State
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [initialTime, setInitialTime] = useState(25 * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
-  
-  // Session Tracking
-  const sessionStartRef = useRef<number>(25 * 60);
-  const pendingSecondsRef = useRef<number>(0);
-  
-  // Data State
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const { 
+    timeLeft, isActive, selectedHabitId, initialTime, habits, dailyProgress,
+    toggleTimer, resetTimer, setDuration, selectHabit, formatTime, progress, loading: contextLoading
+  } = usePomodoro();
+
   const [completions, setCompletions] = useState<Completion[]>([]);
-  const [dailyProgress, setDailyProgress] = useState<Record<number, number>>({});
-  const [loading, setLoading] = useState(true);
+  const [loadingCompletions, setLoadingCompletions] = useState(true);
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Load Data
   useEffect(() => {
-    loadData();
+    loadCompletions();
   }, []);
 
-  async function loadData() {
+  async function loadCompletions() {
     try {
-      const [habitsData, completionsData, progressData] = await Promise.all([
-        getHabits(),
-        getCompletions({ start_date: today, end_date: today }),
-        getHabitProgress(today)
-      ]);
-      setHabits(habitsData);
-      setCompletions(completionsData);
-      
-      const progressMap: Record<number, number> = {};
-      progressData.forEach(p => {
-        progressMap[p.habit_id] = p.remaining_minutes;
-      });
-      setDailyProgress(progressMap);
+      const data = await getCompletions({ start_date: today, end_date: today });
+      setCompletions(data);
     } catch (error) {
-      console.error('Veri yüklenemedi:', error);
+      console.error('Tamamlamalar yüklenemedi:', error);
     } finally {
-      setLoading(false);
+      setLoadingCompletions(false);
     }
   }
 
-  const getRemainingTime = (habit: Habit) => {
-    if (dailyProgress[habit.id] !== undefined) {
-      return dailyProgress[habit.id];
+  const getRemainingTime = (habitId: number) => {
+    if (dailyProgress[habitId] !== undefined) {
+      return dailyProgress[habitId];
     }
-    return habit.duration_minutes || 0;
+    const habit = habits.find(h => h.id === habitId);
+    return habit?.duration_minutes || 0;
   };
-
-  const deductTime = async (seconds: number, habitId: number) => {
-    if (seconds <= 0) return;
-    
-    pendingSecondsRef.current += seconds;
-    const minutesToDeduct = Math.floor(pendingSecondsRef.current / 60);
-    
-    if (minutesToDeduct > 0) {
-      pendingSecondsRef.current %= 60;
-      
-      const habit = habits.find(h => h.id === habitId);
-      if (!habit) return;
-
-      const currentRemaining = getRemainingTime(habit);
-      const newRemaining = Math.max(0, currentRemaining - minutesToDeduct);
-      
-      // Optimistic update
-      setDailyProgress(prev => ({ ...prev, [habitId]: newRemaining }));
-      
-      try {
-        await updateHabitProgress(habitId, today, newRemaining);
-      } catch (err) {
-        console.error('İlerleme kaydedilemedi:', err);
-        // Revert logic could go here
-      }
-    }
-  };
-
-  // Timer Logic
-  useEffect(() => {
-    let interval: number | undefined;
-
-    if (isActive && timeLeft > 0) {
-      interval = window.setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      // Timer finished naturally
-      if (selectedHabitId) {
-        const spent = sessionStartRef.current - timeLeft; // Should be full duration
-        deductTime(spent, selectedHabitId);
-      }
-      setIsActive(false);
-      // Optional: Play sound
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft, selectedHabitId]);
-
-  const toggleTimer = () => {
-    if (isActive) {
-      // Pausing
-      if (selectedHabitId) {
-        const spent = sessionStartRef.current - timeLeft;
-        deductTime(spent, selectedHabitId);
-      }
-    } else {
-      // Starting
-      sessionStartRef.current = timeLeft;
-    }
-    setIsActive(!isActive);
-  };
-  
-  const resetTimer = () => {
-    if (isActive && selectedHabitId) {
-       const spent = sessionStartRef.current - timeLeft;
-       deductTime(spent, selectedHabitId);
-    }
-    setIsActive(false);
-    setTimeLeft(initialTime);
-    sessionStartRef.current = initialTime;
-    pendingSecondsRef.current = 0;
-  };
-
-  const setDuration = (minutes: number) => {
-    // If timer was running, deduct time before switching duration
-    if (isActive && selectedHabitId) {
-      const spent = sessionStartRef.current - timeLeft;
-      deductTime(spent, selectedHabitId);
-    }
-    
-    const seconds = minutes * 60;
-    setInitialTime(seconds);
-    setTimeLeft(seconds);
-    sessionStartRef.current = seconds;
-    setIsActive(false);
-    pendingSecondsRef.current = 0;
-  };
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const progress = ((initialTime - timeLeft) / initialTime) * 100;
 
   // Task Filtering Logic
   const shouldShowHabit = (habit: Habit) => {
@@ -192,20 +78,7 @@ export default function Pomodoro() {
     }
   }
 
-  const handleSelectHabit = (habitId: number) => {
-    // If timer is running, deduct from old habit before switching
-    if (isActive && selectedHabitId && selectedHabitId !== habitId) {
-      const spent = sessionStartRef.current - timeLeft;
-      deductTime(spent, selectedHabitId);
-      sessionStartRef.current = timeLeft; // Reset session start for new habit
-    }
-
-    if (selectedHabitId === habitId) {
-      setSelectedHabitId(null);
-    } else {
-      setSelectedHabitId(habitId);
-    }
-  };
+  const loading = contextLoading || loadingCompletions;
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
@@ -321,7 +194,7 @@ export default function Pomodoro() {
                 {todaysTasks.map((habit) => {
                   const isCompleted = completedHabitIds.has(habit.id);
                   const isSelected = selectedHabitId === habit.id;
-                  const remaining = getRemainingTime(habit);
+                  const remaining = getRemainingTime(habit.id);
                   const totalDuration = habit.duration_minutes || 0;
                   const completed = Math.max(0, totalDuration - remaining);
                   const progressPercent = totalDuration > 0 ? (completed / totalDuration) * 100 : 0;
@@ -329,7 +202,7 @@ export default function Pomodoro() {
                   return (
                     <div
                       key={habit.id}
-                      onClick={() => handleSelectHabit(habit.id)}
+                      onClick={() => selectHabit(habit.id)}
                       className={`group flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 dark:bg-[var(--color-primary)]/10'

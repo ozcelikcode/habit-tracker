@@ -2,6 +2,8 @@ import { Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Header from './Header';
 import { getSettings } from '../../api';
+import { PomodoroProvider } from '../../context/PomodoroContext';
+import PomodoroFooter from '../PomodoroFooter';
 
 // Hex renginden koyu arka plan ve border rengi oluştur
 function generateThemeColors(hexColor: string) {
@@ -102,21 +104,24 @@ export default function Layout() {
   }, []);
 
   return (
-    <div 
-      className={`relative flex h-auto min-h-screen w-full flex-col font-display transition-colors duration-300
-        ${theme === 'dark' ? 'text-white/90' : 'bg-background-light text-gray-800'}`}
-      style={theme === 'dark' ? { backgroundColor: 'var(--color-bg-dark)' } : undefined}
-    >
-      <div className="layout-container flex h-full grow flex-col">
-        <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-40 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col w-full max-w-6xl flex-1">
-            <Header theme={theme} />
-            <main className="flex-1 mt-8">
-              <Outlet />
-            </main>
+    <PomodoroProvider>
+      <div 
+        className={`relative flex h-auto min-h-screen w-full flex-col font-display transition-colors duration-300
+          ${theme === 'dark' ? 'text-white/90' : 'bg-background-light text-gray-800'}`}
+        style={theme === 'dark' ? { backgroundColor: 'var(--color-bg-dark)' } : undefined}
+      >
+        <div className="layout-container flex h-full grow flex-col">
+          <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-40 flex flex-1 justify-center py-5">
+            <div className="layout-content-container flex flex-col w-full max-w-6xl flex-1">
+              <Header theme={theme} />
+              <main className="flex-1 mt-8 pb-24">
+                <Outlet />
+              </main>
+            </div>
           </div>
         </div>
+        <PomodoroFooter />
       </div>
-    </div>
+    </PomodoroProvider>
   );
 }

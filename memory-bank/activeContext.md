@@ -5,6 +5,15 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 
 ## Son Yapılan Değişiklikler
 
+### Pomodoro Arka Plan Zamanlayıcısı (1 Aralık 2025)
+- **Global State**: Pomodoro mantığı `PomodoroContext` içine taşındı.
+- **Persistent Footer**: Site genelinde (Pomodoro sayfası hariç) çalışan mini player tarzı footer eklendi.
+- **Özellikler**:
+  - Sayfa değişse bile timer çalışmaya devam eder.
+  - Footer üzerinden duraklatma/başlatma/kapatma yapılabilir.
+  - Anlık süre ve aktif görev bilgisi gösterilir.
+  - Üst kısımda ince bir progress bar bulunur.
+
 ### Home Sayfası İyileştirmeleri (1 Aralık 2025)
 - **Süre Senkronizasyonu**: Home sayfasındaki görev kartları artık `habit_daily_progress` tablosundan kalan süreyi çekiyor. Pomodoro sayfasındaki ilerleme anlık olarak yansıyor.
 - **Görsel İyileştirme**: Görev kartları artık alışkanlığın kendi rengini (background ve border) tüm kutuya uyguluyor (`color-mix` ile opaklık ayarlı).

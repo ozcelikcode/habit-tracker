@@ -10,9 +10,9 @@ export default {
       colors: {
         "primary": "#2EAC8A",
         "primary-dark": "#0E7C5D",
-        "background-light": "#f6f8f8",
+        "background-light": "var(--color-bg-light)",
         "background-dark": "#10221d",
-        "border-light": "#e5e7eb",
+        "border-light": "var(--color-border-light)",
         "border-dark": "#23483f",
         // Site accent renkleri - dark/light uyumlu
         "accent-teal": "#14B8A6",

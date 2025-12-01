@@ -14,7 +14,7 @@ export default function Header({ theme }: HeaderProps) {
     <header className="px-4 sm:px-6 py-4">
       <div 
         className={`flex items-center justify-between rounded-full px-6 py-3
-          ${isDark ? 'bg-white/5 border' : 'bg-white border border-gray-200 shadow-sm'}`}
+          ${isDark ? 'bg-white/5 border' : 'bg-white border border-border-light shadow-sm'}`}
         style={isDark ? { borderColor: 'var(--color-border-dark)' } : undefined}
       >
         
@@ -103,7 +103,7 @@ export default function Header({ theme }: HeaderProps) {
       {mobileMenuOpen && (
         <nav 
           className={`md:hidden mt-2 rounded-2xl p-2 flex flex-col gap-1
-            ${isDark ? 'bg-white/5 border' : 'bg-white border border-gray-200 shadow-sm'}`}
+            ${isDark ? 'bg-white/5 border' : 'bg-white border border-border-light shadow-sm'}`}
           style={isDark ? { borderColor: 'var(--color-border-dark)' } : undefined}
         >
           <NavLink

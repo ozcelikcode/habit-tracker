@@ -85,7 +85,7 @@ export default function Habits() {
 
       {/* Habits List */}
       {habits.length === 0 ? (
-        <div className="text-center py-16 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+        <div className="text-center py-16 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
           <ClipboardList size={64} className="text-gray-400 dark:text-white/30 mx-auto mb-4" />
           <p className="text-gray-500 dark:text-white/50 text-lg">Henüz alışkanlık eklemediniz.</p>
           <Link
@@ -101,7 +101,7 @@ export default function Habits() {
           {habits.map((habit) => (
             <div
               key={habit.id}
-              className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl hover:border-primary/30 transition-colors"
+              className="p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl hover:border-primary/30 transition-colors"
             >
               <div className="flex items-start justify-between mb-4">
                 <div

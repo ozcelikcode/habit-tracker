@@ -10,6 +10,8 @@
   --color-primary-dark: #0E7C5D;
   --color-bg-dark: #10221d;
   --color-border-dark: #32675a;
+  --color-bg-light: #f6f8f8;
+  --color-border-light: #e5e7eb;
 }
 
 /* Focus ring for checkboxes */

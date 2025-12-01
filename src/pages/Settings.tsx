@@ -93,7 +93,7 @@ export default function Settings() {
 
       <div className="space-y-6">
         {/* Kullanıcı Adı */}
-        <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+        <div className="p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
           <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Profil</h3>
           <div>
             <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Kullanıcı Adı</label>
@@ -102,13 +102,13 @@ export default function Settings() {
               value={settings.username}
               onChange={(e) => setSettings({ ...settings, username: e.target.value })}
               placeholder="Adınızı girin"
-              className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
         </div>
 
         {/* Tema */}
-        <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+        <div className="p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
           <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Görünüm</h3>
           
           {/* Tema Modu */}
@@ -121,7 +121,7 @@ export default function Settings() {
                 className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
                   settings.theme === 'dark'
                     ? 'bg-primary text-white border-primary font-medium'
-                    : 'bg-white dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
+                    : 'bg-white dark:bg-white/5 border-border-light dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
                 }`}
               >
                 <Moon size={20} className="mr-2 inline-block align-middle" />
@@ -133,7 +133,7 @@ export default function Settings() {
                 className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
                   settings.theme === 'light'
                     ? 'bg-primary text-white border-primary font-medium'
-                    : 'bg-white dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
+                    : 'bg-white dark:bg-white/5 border-border-light dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
                 }`}
               >
                 <Sun size={20} className="mr-2 inline-block align-middle" />
@@ -185,7 +185,7 @@ export default function Settings() {
         </div>
 
         {/* Bildirimler */}
-        <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+        <div className="p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
           <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-2">Bildirimler</h3>
           <p className="text-sm text-gray-600 dark:text-white/60 mb-3">
             Planlanan saatlerde hatırlatma gönderebilmek için push bildirimi izni gerekir.
@@ -233,7 +233,7 @@ export default function Settings() {
         </div>
 
         {/* Hakkında */}
-        <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+        <div className="p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
           <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Info</h3>
           <div className="space-y-2 text-gray-600 dark:text-white/60">
             <p>

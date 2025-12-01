@@ -5,6 +5,14 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 
 ## Son Yapılan Değişiklikler
 
+### Pomodoro Veri Bütünlüğü (Data Integrity) (Güncel)
+- **Sorun**: Sayfa yenilendiğinde, o ana kadar çalışılan süre (henüz veritabanına yazılmamışsa) kayboluyordu.
+- **Çözüm**: `PomodoroContext` güncellendi.
+  - `sessionStart` ve `pendingSeconds` localStorage'a kaydediliyor.
+  - Sayfa yüklendiğinde, eğer önceki oturum "yarım kalmışsa" (sessionStart > timeLeft), aradaki fark hesaplanıyor.
+  - Bu fark "kaydedilmemiş çalışma" olarak işaretlenip, veri yüklenir yüklenmez otomatik olarak düşülüyor.
+  - Böylece sayfa yenilense bile çalışılan dakikalar alışkanlıktan düşülüyor.
+
 ### Pomodoro Arka Plan Zamanlayıcısı (1 Aralık 2025)
 - **Global State**: Pomodoro mantığı `PomodoroContext` içine taşındı.
 - **Persistent Footer**: Site genelinde (Pomodoro sayfası hariç) çalışan mini player tarzı footer eklendi.
@@ -69,6 +77,10 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 - Not silme özelliği ve ViewNote detay sayfası eklendi
 
 ## Aktif Kararlar
+
+### Pomodoro Veri Bütünlüğü
+- Sayfa yenilendiğinde veri kaybını önlemek için "unsaved work" (kaydedilmemiş çalışma) hesaplaması yapılıyor.
+- Timer her zaman "duraklatılmış" olarak başlar (güvenlik için), ancak önceki çalışılan süre hesaba katılır.
 
 ### Dinamik Renk Sistemi
 - CSS değişkenleri ile runtime renk değişimi

@@ -345,7 +345,7 @@ export default function Home() {
       {/* Notification CTA */}
       {notificationStatus === 'default' && (
         <div className="px-4">
-          <div className="mb-4 flex items-start gap-3 rounded-xl border border-gray-200 dark:border-[#32675a] bg-white/80 dark:bg-white/5 p-4 shadow-sm">
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-border-light dark:border-[#32675a] bg-white/80 dark:bg-white/5 p-4 shadow-sm">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Bell size={18} />
             </div>
@@ -368,7 +368,7 @@ export default function Home() {
       )}
       {notificationStatus === 'unsupported' && (
         <div className="px-4">
-          <div className="mb-4 rounded-xl border border-gray-200 dark:border-[#32675a] bg-white/70 dark:bg-white/5 p-4 text-sm text-gray-600 dark:text-white/60">
+          <div className="mb-4 rounded-xl border border-border-light dark:border-[#32675a] bg-white/70 dark:bg-white/5 p-4 text-sm text-gray-600 dark:text-white/60">
             Tarayıcınız bildirimleri desteklemiyor, ancak hatırlatmalar uygulama içinde gösterilecek.
           </div>
         </div>
@@ -395,7 +395,7 @@ export default function Home() {
 
           {/* Seçili Gün Bilgisi */}
           {selectedDay && (
-            <div className="mt-4 mx-4 mb-2 rounded-xl border border-gray-200 dark:border-[#32675a] bg-white/90 dark:bg-black/40 p-4 max-w-xl">
+            <div className="mt-4 mx-4 mb-2 rounded-xl border border-border-light dark:border-[#32675a] bg-white/90 dark:bg-black/40 p-4 max-w-xl">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-white/40">
@@ -438,15 +438,15 @@ export default function Home() {
               İstatistikler
             </h2>
             <div className="flex flex-col gap-4">
-              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a]">
+              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a]">
                 <p className="text-gray-600 dark:text-white/70 text-base font-medium leading-normal">Mevcut Seri</p>
                 <p className="text-gray-800 dark:text-white tracking-light text-3xl font-bold leading-tight">{stats.currentStreak} gün</p>
               </div>
-              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a]">
+              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a]">
                 <p className="text-gray-600 dark:text-white/70 text-base font-medium leading-normal">En Uzun Seri</p>
                 <p className="text-gray-800 dark:text-white tracking-light text-3xl font-bold leading-tight">{stats.longestStreak} gün</p>
               </div>
-              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a]">
+              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a]">
                 <p className="text-gray-600 dark:text-white/70 text-base font-medium leading-normal">Toplam Tamamlanan</p>
                 <p className="text-gray-800 dark:text-white tracking-light text-3xl font-bold leading-tight">{stats.totalCompleted}</p>
               </div>
@@ -458,7 +458,7 @@ export default function Home() {
             <h2 className="text-gray-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               Bugünün Görevleri
             </h2>
-            <div className="flex flex-col gap-3 p-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+            <div className="flex flex-col gap-3 p-4 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
               {todaysHabits.length === 0 ? (
                 <div className="text-center py-8">
                   {habits.length === 0 ? (
@@ -613,12 +613,12 @@ export default function Home() {
               <StickyNote size={22} className="text-primary" />
               Günün Notu
             </h2>
-            <div className="p-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
+            <div className="p-4 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
               <textarea
                 value={dailyNote.content}
                 onChange={(e) => setDailyNote({ ...dailyNote, content: e.target.value })}
                 placeholder="Bugün için notlarınızı buraya yazın..."
-                className="w-full h-32 px-4 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                className="w-full h-32 px-4 py-3 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               />
               <div className="flex items-center justify-between mt-3">
                 <p className="text-gray-400 dark:text-white/30 text-xs">

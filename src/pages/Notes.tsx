@@ -22,12 +22,12 @@ interface NoteItem {
 
 // Zarif, koyu tonlu tema renkleri - tüm kart boyancak
 const THEME_STYLES: Record<NoteTheme, { className: string; isDynamic?: boolean }> = {
-  default: { className: '', isDynamic: true },
-  emerald: { className: 'bg-emerald-950/60 border-emerald-800/40 hover:border-emerald-700/60' },
-  blue: { className: 'bg-sky-950/60 border-sky-800/40 hover:border-sky-700/60' },
-  amber: { className: 'bg-amber-950/60 border-amber-800/40 hover:border-amber-700/60' },
-  rose: { className: 'bg-rose-950/60 border-rose-800/40 hover:border-rose-700/60' },
-  slate: { className: 'bg-slate-900/60 border-slate-700/40 hover:border-slate-600/60' },
+  default: { className: 'text-gray-800 dark:text-white', isDynamic: true },
+  emerald: { className: 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/40 text-emerald-900 dark:text-white' },
+  blue: { className: 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/40 text-sky-900 dark:text-white' },
+  amber: { className: 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-white' },
+  rose: { className: 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/40 text-rose-900 dark:text-white' },
+  slate: { className: 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/40 text-slate-900 dark:text-white' },
 };
 
 function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDelete: (id: string) => void; onNavigate: (id: string) => void }) {
@@ -39,10 +39,6 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    ...(isDynamicTheme ? {
-      backgroundColor: 'color-mix(in srgb, var(--color-primary) 20%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-primary) 40%, transparent)'
-    } : {})
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -60,13 +56,14 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
       style={style}
       onClick={handleCardClick}
       className={`rounded-2xl border p-4 shadow-sm transition-all cursor-pointer group 
-        ${isDynamicTheme ? '' : themeConfig.className}
+        ${isDynamicTheme ? 'bg-white dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] border-border-light dark:border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)]' : themeConfig.className}
+        ${themeConfig.className}
         ${isDragging ? 'opacity-50 scale-105' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {note.category && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 text-xs font-semibold text-white/80">
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${isDynamicTheme ? 'bg-primary/10 text-primary dark:bg-white/10 dark:text-white/80' : 'bg-black/5 dark:bg-white/10'}`}>
               <Tag size={14} />
               {note.category}
             </span>
@@ -78,14 +75,14 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
               e.stopPropagation();
               onDelete(note.id);
             }}
-            className="p-1.5 rounded-lg text-white/40 hover:text-rose-400 hover:bg-rose-500/20 opacity-0 group-hover:opacity-100 transition-all"
+            className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/10 hover:text-red-500"
             title="Sil"
             data-no-navigate
           >
             <Trash2 size={16} />
           </button>
           <button
-            className="p-1.5 rounded-lg text-white/40 hover:text-white/70 cursor-grab"
+            className="p-1.5 rounded-lg cursor-grab hover:bg-black/5 dark:hover:bg-white/10"
             {...attributes}
             {...listeners}
             data-no-navigate
@@ -95,12 +92,12 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
         </div>
       </div>
 
-      <h3 className="mt-3 text-lg font-semibold text-white line-clamp-2">{note.title || 'Başlıksız'}</h3>
-      <p className="mt-2 text-sm text-white/60 line-clamp-3">
+      <h3 className="mt-3 text-lg font-semibold line-clamp-2">{note.title || 'Başlıksız'}</h3>
+      <p className="mt-2 text-sm opacity-70 line-clamp-3">
         {note.plainText || 'İçerik yok'}
       </p>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/40">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs opacity-50">
         <span className="inline-flex items-center gap-1">
           <CalendarClock size={14} />
           {note.createdAt}
@@ -200,7 +197,7 @@ export default function Notes() {
 
       {/* Notes List */}
       {notes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-[#32675a] bg-white/60 dark:bg-white/5 p-16 text-center">
+        <div className="rounded-2xl border border-dashed border-border-light dark:border-[#32675a] bg-white/60 dark:bg-white/5 p-16 text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <StickyNote size={32} className="text-primary" />

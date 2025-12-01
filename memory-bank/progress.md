@@ -72,6 +72,7 @@
 - [x] Görev tamamlama entegrasyonu
 - [x] Navbar entegrasyonu
 - [x] **Günlük İlerleme Takibi**: Süre düşümü artık günlük bazda yapılıyor ve duraklatma anında veritabanına işleniyor.
+- [x] **Veri Kalıcılığı (Persistence)**: Sayfa yenilendiğinde timer durumu ve çalışılan süre korunur. Yarım kalan oturumlar otomatik olarak düşülür.
 - [x] **Detaylı Görev Görünümü**: Görev kartlarında tamamlanan/kalan süre bilgisi ve progress bar.
 
 ### Home Sayfası İyileştirmeleri (1 Aralık 2025)

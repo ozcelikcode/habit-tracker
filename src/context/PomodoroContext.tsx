@@ -40,6 +40,57 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // We need a ref to hold the potential unsaved work until data is loaded
+  const unsavedWorkRef = useRef<number>(0);
+
+  // Load state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem('pomodoro-state');
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed.timeLeft !== undefined) setTimeLeft(parsed.timeLeft);
+        if (parsed.initialTime !== undefined) setInitialTime(parsed.initialTime);
+        if (parsed.selectedHabitId !== undefined) setSelectedHabitId(parsed.selectedHabitId);
+        
+        // Restore pending seconds
+        if (parsed.pendingSeconds !== undefined) {
+          pendingSecondsRef.current = parsed.pendingSeconds;
+        }
+
+        // Restore session start and calculate unsaved work
+        if (parsed.sessionStart !== undefined) {
+             sessionStartRef.current = parsed.sessionStart;
+             // Calculate unsaved work (interrupted session)
+             if (parsed.timeLeft !== undefined && parsed.selectedHabitId) {
+                 const diff = parsed.sessionStart - parsed.timeLeft;
+                 if (diff > 0) {
+                     unsavedWorkRef.current = diff;
+                 }
+             }
+        } else if (parsed.initialTime) {
+            sessionStartRef.current = parsed.initialTime;
+        }
+        
+        setIsActive(false);
+      }
+    } catch (e) {
+      console.error('Failed to load pomodoro state', e);
+    }
+  }, []);
+
+  // Save state to localStorage whenever relevant state changes
+  useEffect(() => {
+    const stateToSave = {
+      timeLeft,
+      initialTime,
+      selectedHabitId,
+      sessionStart: sessionStartRef.current,
+      pendingSeconds: pendingSecondsRef.current
+    };
+    localStorage.setItem('pomodoro-state', JSON.stringify(stateToSave));
+  }, [timeLeft, initialTime, selectedHabitId]); // sessionStartRef and pendingSecondsRef are refs, but timeLeft changes trigger save
+
   const refreshData = useCallback(async () => {
     try {
       const [habitsData, progressData] = await Promise.all([
@@ -94,6 +145,16 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       }
     }
   };
+
+  // Effect to process unsaved work once data is loaded
+  useEffect(() => {
+      if (!loading && unsavedWorkRef.current > 0 && selectedHabitId) {
+          deductTime(unsavedWorkRef.current, selectedHabitId);
+          unsavedWorkRef.current = 0;
+          // Reset session start to current time left to avoid double counting
+          sessionStartRef.current = timeLeft; 
+      }
+  }, [loading, selectedHabitId, timeLeft]); // timeLeft dependency added for correctness of sessionStartRef reset
 
   // Timer Logic
   useEffect(() => {

@@ -211,7 +211,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
         >
           <div className="font-medium">{new Date(hoveredCell.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <div className="text-gray-300">
-            {hoveredCell.count}/{totalHabits} görev tamamlandı
+            {hoveredCell.count} görev tamamlandı
           </div>
           {noteDatesSet.has(hoveredCell.date) && (
             <div className="flex items-center gap-1 text-amber-400 mt-1">

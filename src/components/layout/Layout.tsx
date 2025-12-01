@@ -47,15 +47,22 @@ function generateThemeColors(hexColor: string) {
   // Border için: aynı hue, orta saturation, düşük lightness
   const borderDark = `hsl(${Math.round(h * 360)}, ${Math.round(s * 50)}%, 25%)`;
   
-  return { bgDark, borderDark };
+  // Açık arka plan için: aynı hue, çok düşük saturation, çok yüksek lightness
+  const bgLight = `hsl(${Math.round(h * 360)}, ${Math.round(s * 30)}%, 97%)`;
+  // Açık border için: aynı hue, düşük saturation, yüksek lightness
+  const borderLight = `hsl(${Math.round(h * 360)}, ${Math.round(s * 40)}%, 85%)`;
+
+  return { bgDark, borderDark, bgLight, borderLight };
 }
 
 function applyAccentColor(accentColor: string) {
-  const { bgDark, borderDark } = generateThemeColors(accentColor);
+  const { bgDark, borderDark, bgLight, borderLight } = generateThemeColors(accentColor);
   
   document.documentElement.style.setProperty('--color-primary', accentColor);
   document.documentElement.style.setProperty('--color-bg-dark', bgDark);
   document.documentElement.style.setProperty('--color-border-dark', borderDark);
+  document.documentElement.style.setProperty('--color-bg-light', bgLight);
+  document.documentElement.style.setProperty('--color-border-light', borderLight);
 }
 
 export default function Layout() {
@@ -107,8 +114,8 @@ export default function Layout() {
     <PomodoroProvider>
       <div 
         className={`relative flex h-auto min-h-screen w-full flex-col font-display transition-colors duration-300
-          ${theme === 'dark' ? 'text-white/90' : 'bg-background-light text-gray-800'}`}
-        style={theme === 'dark' ? { backgroundColor: 'var(--color-bg-dark)' } : undefined}
+          ${theme === 'dark' ? 'text-white/90' : 'text-gray-800'}`}
+        style={{ backgroundColor: theme === 'dark' ? 'var(--color-bg-dark)' : 'var(--color-bg-light)' }}
       >
         <div className="layout-container flex h-full grow flex-col">
           <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-40 flex flex-1 justify-center py-5">

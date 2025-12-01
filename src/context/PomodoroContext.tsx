@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode, useCallback } from 'react';
 import { getHabits, updateHabitProgress, getHabitProgress } from '../api';
 import type { Habit } from '../types';
 
@@ -18,6 +18,7 @@ interface PomodoroContextType {
   loading: boolean;
   refreshData: () => Promise<void>;
   updateDailyProgress: (habitId: number, minutes: number) => void;
+  totalWorkedSeconds: number;
 }
 
 const PomodoroContext = createContext<PomodoroContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const [initialTime, setInitialTime] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
   const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
+  const [totalWorkedSeconds, setTotalWorkedSeconds] = useState(0);
   
   // Session Tracking
   const sessionStartRef = useRef<number>(25 * 60);
@@ -52,6 +54,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         if (parsed.timeLeft !== undefined) setTimeLeft(parsed.timeLeft);
         if (parsed.initialTime !== undefined) setInitialTime(parsed.initialTime);
         if (parsed.selectedHabitId !== undefined) setSelectedHabitId(parsed.selectedHabitId);
+        if (parsed.totalWorkedSeconds !== undefined) setTotalWorkedSeconds(parsed.totalWorkedSeconds);
         
         // Restore pending seconds
         if (parsed.pendingSeconds !== undefined) {
@@ -86,10 +89,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       initialTime,
       selectedHabitId,
       sessionStart: sessionStartRef.current,
-      pendingSeconds: pendingSecondsRef.current
+      pendingSeconds: pendingSecondsRef.current,
+      totalWorkedSeconds
     };
     localStorage.setItem('pomodoro-state', JSON.stringify(stateToSave));
-  }, [timeLeft, initialTime, selectedHabitId]); // sessionStartRef and pendingSecondsRef are refs, but timeLeft changes trigger save
+  }, [timeLeft, initialTime, selectedHabitId, totalWorkedSeconds]); // sessionStartRef and pendingSecondsRef are refs, but timeLeft changes trigger save
 
   const refreshData = useCallback(async () => {
     try {
@@ -163,6 +167,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     if (isActive && timeLeft > 0) {
       interval = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
+        setTotalWorkedSeconds((prev) => prev + 1);
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
       // Timer finished naturally
@@ -257,7 +262,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       progress,
       loading,
       refreshData,
-      updateDailyProgress
+      updateDailyProgress,
+      totalWorkedSeconds
     }}>
       {children}
     </PomodoroContext.Provider>

@@ -15,7 +15,7 @@ export default function Home() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState<Completion[]>([]);
   const [stats, setStats] = useState<Stats>({ totalCompleted: 0, currentStreak: 0, longestStreak: 0 });
-  const [calendarData, setCalendarData] = useState<{ completed_date: string; completed_count: number }[]>([]);
+  const [calendarData, setCalendarData] = useState<{ completed_date: string; completed_count: number; total_count?: number }[]>([]);
   const [totalHabits, setTotalHabits] = useState(0);
   const [settings, setSettings] = useState<Settings>({ username: 'Kullanıcı', theme: 'dark' });
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,7 @@ export default function Home() {
   const [selectedDay, setSelectedDay] = useState<{
     date: string;
     count: number;
+    total: number;
     hasNote: boolean;
     noteContent: string;
     loading: boolean;
@@ -241,13 +242,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [notificationStatus, todaysHabits, completedHabitIds, notifiedHabits, today]);
 
-  async function handleDayClick(info: { date: string; count: number; hasNote: boolean }) {
-    const { date, count, hasNote } = info;
+  async function handleDayClick(info: { date: string; count: number; total: number; hasNote: boolean }) {
+    const { date, count, total, hasNote } = info;
 
     // İlk anda paneli göster
     setSelectedDay({
       date,
       count,
+      total,
       hasNote,
       noteContent: '',
       loading: true,
@@ -405,7 +407,7 @@ export default function Home() {
                     {formatDateTR(selectedDay.date)}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60 mt-1">
-                    {selectedDay.count}/{totalHabits} görev tamamlandı
+                    {selectedDay.count}/{selectedDay.total} görev tamamlandı
                   </p>
                 </div>
                 <button

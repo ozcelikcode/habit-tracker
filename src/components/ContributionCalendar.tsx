@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { StickyNote } from 'lucide-react';
 
 interface CalendarProps {
-  data: { completed_date: string; completed_count: number }[];
+  data: { completed_date: string; completed_count: number; total_count?: number }[];
   totalHabits: number;
   year: number;
   noteDates?: string[];
-  onDayClick?: (info: { date: string; count: number; hasNote: boolean }) => void;
+  onDayClick?: (info: { date: string; count: number; total: number; hasNote: boolean }) => void;
 }
 
 const formatDate = (date: Date) => {
@@ -22,33 +22,40 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
 
   // Takvim verilerini oluştur
   const calendarCells = useMemo(() => {
-    const cells: { date: string; level: number; count: number }[] = [];
+    const cells: { date: string; level: number; count: number; total: number }[] = [];
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
 
     // Veriyi map'e çevir
-    const dataMap = new Map<string, number>();
+    const dataMap = new Map<string, { completed: number; total: number }>();
     data.forEach((d) => {
-      dataMap.set(d.completed_date, d.completed_count);
+      dataMap.set(d.completed_date, { completed: d.completed_count, total: d.total_count || totalHabits });
     });
 
     // Her gün için hücre oluştur
     const current = new Date(startDate);
     while (current <= endDate) {
       const dateStr = formatDate(current);
-      const count = dataMap.get(dateStr) || 0;
+      const dayData = dataMap.get(dateStr) || { completed: 0, total: totalHabits };
+      const count = dayData.completed;
+      const total = dayData.total;
 
-      // Seviye hesapla (0-4)
+      // Seviye hesapla (0-10) - Sabit ölçek
       let level = 0;
-      if (totalHabits > 0 && count > 0) {
-        const ratio = count / totalHabits;
-        if (ratio >= 1) level = 4;
-        else if (ratio >= 0.75) level = 3;
-        else if (ratio >= 0.5) level = 2;
-        else if (ratio > 0) level = 1;
+      if (count > 0) {
+        // 1-10 arası ölçeklendirme
+        // Eğer total 0 ise (imkansız ama) 0 al
+        if (total > 0) {
+          const ratio = count / total;
+          // 10 seviyeli ölçek: 0.1 -> 1, 1.0 -> 10
+          level = Math.ceil(ratio * 10);
+        } else {
+          // Total yoksa eski mantık (max 4 gibi düşünelim ama burada 10'a map edelim)
+          level = Math.min(10, count); 
+        }
       }
 
-      cells.push({ date: dateStr, level, count });
+      cells.push({ date: dateStr, level, count, total });
       current.setDate(current.getDate() + 1);
     }
 
@@ -61,28 +68,28 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
     return firstDay;
   }, [year]);
 
-  const [hoveredCell, setHoveredCell] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
+  const [hoveredCell, setHoveredCell] = useState<{ date: string; count: number; total: number; x: number; y: number } | null>(null);
 
   // Renk seviyeleri - dinamik CSS değişkenleri kullanır
-  const getLevelClass = (level: number) => {
-    const classes = [
-      'bg-gray-300 dark:bg-white/10',           // level 0 - boş
-      'calendar-level-1',                        // level 1
-      'calendar-level-2',                        // level 2
-      'calendar-level-3',                        // level 3
-      'calendar-level-4',                        // level 4 - en koyu
-    ];
-    return classes[level] || classes[0];
+  // 1-10 arası opacity ile
+  const getLevelStyle = (level: number) => {
+    if (level === 0) return {}; // Boş
+    // Opacity 0.1'den 1.0'a kadar
+    const opacity = Math.min(1, Math.max(0.1, level / 10));
+    return {
+      backgroundColor: `color-mix(in srgb, var(--color-primary) ${opacity * 100}%, transparent)`,
+      borderColor: `color-mix(in srgb, var(--color-primary) ${Math.min(1, opacity + 0.2) * 100}%, transparent)`
+    };
   };
 
   // Haftaları hesapla (53 hafta)
   const weeks = useMemo(() => {
-    const result: { date: string; level: number; count: number }[][] = [];
-    let currentWeek: { date: string; level: number; count: number }[] = [];
+    const result: { date: string; level: number; count: number; total: number }[][] = [];
+    let currentWeek: { date: string; level: number; count: number; total: number }[] = [];
     
     // İlk hafta için boş günler ekle
     for (let i = 0; i < firstDayOffset; i++) {
-      currentWeek.push({ date: '', level: -1, count: 0 });
+      currentWeek.push({ date: '', level: -1, count: 0, total: 0 });
     }
     
     calendarCells.forEach((cell) => {
@@ -96,7 +103,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
     // Son haftayı ekle
     if (currentWeek.length > 0) {
       while (currentWeek.length < 7) {
-        currentWeek.push({ date: '', level: -1, count: 0 });
+        currentWeek.push({ date: '', level: -1, count: 0, total: 0 });
       }
       result.push(currentWeek);
     }
@@ -149,12 +156,13 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
                 <div
                   key={`${weekIndex}-${dayIndex}`}
                   className={`aspect-square rounded-[2px] sm:rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover:ring-gray-400 dark:hover:ring-white/50 relative ${
-                    cell.level === -1 ? 'bg-transparent cursor-default' : getLevelClass(cell.level)
+                    cell.level === -1 ? 'bg-transparent cursor-default' : cell.level === 0 ? 'bg-gray-300 dark:bg-white/10' : ''
                   }`}
+                  style={cell.level > 0 ? getLevelStyle(cell.level) : undefined}
                   onMouseEnter={(e) => {
                     if (cell.date) {
                       const rect = e.currentTarget.getBoundingClientRect();
-                      setHoveredCell({ date: cell.date, count: cell.count, x: rect.left, y: rect.top });
+                      setHoveredCell({ date: cell.date, count: cell.count, total: cell.total, x: rect.left, y: rect.top });
                     }
                   }}
                   onMouseLeave={() => setHoveredCell(null)}
@@ -164,13 +172,14 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
                       setHoveredCell(
                         hoveredCell?.date === cell.date
                           ? null
-                          : { date: cell.date, count: cell.count, x: 0, y: 0 }
+                          : { date: cell.date, count: cell.count, total: cell.total, x: 0, y: 0 }
                       );
 
                       // Parent bileşene tıklanan günü bildir
                       onDayClick?.({
                         date: cell.date,
                         count: cell.count,
+                        total: cell.total,
                         hasNote: noteDatesSet.has(cell.date),
                       });
                     }
@@ -192,10 +201,9 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
         <span>Az</span>
         <div className="flex items-center gap-1 sm:gap-2">
           <div className="size-2.5 sm:size-3 rounded-sm bg-gray-300 dark:bg-white/10" />
-          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-1" />
-          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-2" />
-          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-3" />
-          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-4" />
+          {[2, 4, 6, 8, 10].map(level => (
+             <div key={level} className="size-2.5 sm:size-3 rounded-sm" style={getLevelStyle(level)} />
+          ))}
         </div>
         <span>Çok</span>
       </div>
@@ -211,7 +219,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
         >
           <div className="font-medium">{new Date(hoveredCell.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <div className="text-gray-300">
-            {hoveredCell.count} görev tamamlandı
+            {hoveredCell.count}/{hoveredCell.total} görev tamamlandı
           </div>
           {noteDatesSet.has(hoveredCell.date) && (
             <div className="flex items-center gap-1 text-amber-400 mt-1">

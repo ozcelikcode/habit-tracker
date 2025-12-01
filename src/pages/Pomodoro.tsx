@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Play, Pause, RotateCcw, Clock, CheckCircle2, Circle } from 'lucide-react';
+import { Play, Pause, RotateCcw, Clock, CheckCircle2, Circle, Timer } from 'lucide-react';
 import { getCompletions, completeHabit, uncompleteHabit } from '../api';
 import type { Habit, Completion } from '../types';
 import { HABIT_ICON_MAP } from '../icons/habitIcons';
@@ -8,7 +8,8 @@ import { usePomodoro } from '../context/PomodoroContext';
 export default function Pomodoro() {
   const { 
     timeLeft, isActive, selectedHabitId, initialTime, habits, dailyProgress,
-    toggleTimer, resetTimer, setDuration, selectHabit, formatTime, progress, loading: contextLoading
+    toggleTimer, resetTimer, setDuration, selectHabit, formatTime, progress, loading: contextLoading,
+    totalWorkedSeconds
   } = usePomodoro();
 
   const [completions, setCompletions] = useState<Completion[]>([]);
@@ -30,6 +31,13 @@ export default function Pomodoro() {
       setLoadingCompletions(false);
     }
   }
+
+  const formatTotalDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h} sa ${m} dk`;
+    return `${m} dk`;
+  };
 
   const getRemainingTime = (habitId: number) => {
     if (dailyProgress[habitId] !== undefined) {
@@ -168,8 +176,22 @@ export default function Pomodoro() {
         </div>
 
         {/* Right Column: Tasks */}
-        <div className="lg:w-1/3 flex flex-col h-full">
-          <div className="bg-gray-50 dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-[#32675a] h-full">
+        <div className="lg:w-1/3 flex flex-col h-full gap-6">
+          {/* Total Worked Time Box */}
+          <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-[#32675a] shadow-sm">
+             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
+                <Timer className="text-[var(--color-primary)]" size={20} />
+                Toplam Çalışılan Süre
+             </h2>
+             <p className="text-3xl font-black text-gray-800 dark:text-white tabular-nums">
+                {formatTotalDuration(totalWorkedSeconds)}
+             </p>
+             <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
+               Tüm oturumlarınızın toplamı
+             </p>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-[#32675a] flex-1">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
               <Clock className="text-[var(--color-primary)]" />
               Zamanlı Görevler

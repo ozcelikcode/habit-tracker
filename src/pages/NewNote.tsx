@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, ChevronDown, Check, Plus, AlertCircle } from 'lucide-react';
 
 type NoteTheme = 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
@@ -87,6 +87,7 @@ function extractPlainText(blocks: any[]): string {
 }
 
 export default function NewNote() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -97,11 +98,33 @@ export default function NewNote() {
   const [theme, setTheme] = useState<NoteTheme>('default');
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; content?: string }>({});
+  const [initialContent, setInitialContent] = useState<any>(null);
   
   const editorRef = useRef<any>(null);
   const editorContainerRef = useRef<HTMLDivElement | null>(null);
   const editorInitialized = useRef(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load existing note if editing
+  useEffect(() => {
+    if (id) {
+      const stored = localStorage.getItem('custom-notes');
+      if (stored) {
+        try {
+          const notes: NoteItem[] = JSON.parse(stored);
+          const note = notes.find(n => n.id === id);
+          if (note) {
+            setTitle(note.title);
+            setCategory(note.category);
+            setTheme(note.theme);
+            setInitialContent(note.content);
+          }
+        } catch (e) {
+          console.error('Not yüklenirken hata:', e);
+        }
+      }
+    }
+  }, [id]);
 
   // Load categories from localStorage
   useEffect(() => {
@@ -138,6 +161,9 @@ export default function NewNote() {
   // Initialize Editor.js - only once and using element holder
   useEffect(() => {
     if (editorInitialized.current) return;
+    // If editing, wait for initialContent to be loaded
+    if (id && !initialContent) return;
+
     const container = editorContainerRef.current;
     if (!container) return;
 
@@ -162,8 +188,9 @@ export default function NewNote() {
 
         editorInstance = new EditorJS({
           holder: container,
-          autofocus: true,
+          autofocus: !id, // Only autofocus if new note
           placeholder: 'Notunuzu yazmaya başlayın...',
+          data: initialContent || undefined,
           tools: {
             header: {
               class: Header,
@@ -215,7 +242,7 @@ export default function NewNote() {
       editorRef.current = null;
       editorInitialized.current = false;
     };
-  }, []);
+  }, [id, initialContent]);
 
   const handleAddCategory = () => {
     const name = newCategory.trim();
@@ -269,22 +296,46 @@ export default function NewNote() {
       const sentenceCount = countSentences(plainText);
       const createdAt = formatDateHuman(new Date());
 
-      const newNote: NoteItem = {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        category: category.trim(),
-        theme,
-        content: savedData,
-        plainText: plainText.trim(),
-        createdAt,
-        charCount,
-        sentenceCount,
-      };
-
-      // Load existing notes and add new one
       const stored = localStorage.getItem('custom-notes');
       const existingNotes: NoteItem[] = stored ? JSON.parse(stored) : [];
-      const updatedNotes = [newNote, ...existingNotes];
+      
+      let updatedNotes;
+      
+      if (id) {
+        // Update existing note
+        updatedNotes = existingNotes.map(note => {
+          if (note.id === id) {
+            return {
+              ...note,
+              title: title.trim(),
+              category: category.trim(),
+              theme,
+              content: savedData,
+              plainText: plainText.trim(),
+              // Keep original creation date or update? Usually keep original or add updatedAt
+              // For simplicity, we keep original createdAt
+              charCount,
+              sentenceCount,
+            };
+          }
+          return note;
+        });
+      } else {
+        // Create new note
+        const newNote: NoteItem = {
+          id: crypto.randomUUID(),
+          title: title.trim(),
+          category: category.trim(),
+          theme,
+          content: savedData,
+          plainText: plainText.trim(),
+          createdAt,
+          charCount,
+          sentenceCount,
+        };
+        updatedNotes = [newNote, ...existingNotes];
+      }
+
       localStorage.setItem('custom-notes', JSON.stringify(updatedNotes));
 
       // Navigate back to notes list
@@ -309,10 +360,10 @@ export default function NewNote() {
           </button>
           <div>
             <h1 className="text-gray-800 dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em]">
-              Yeni Not
+              {id ? 'Notu Düzenle' : 'Yeni Not'}
             </h1>
             <p className="text-gray-500 dark:text-white/50 text-sm mt-1">
-              Zengin metin editörü ile notunu oluştur
+              Zengin metin editörü ile notunu {id ? 'düzenle' : 'oluştur'}
             </p>
           </div>
         </div>

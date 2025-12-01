@@ -294,13 +294,25 @@ app.get('/api/calendar/:year', (req, res) => {
       GROUP BY completed_date
     `).all(startDate, endDate);
 
-    // Toplam aktif alışkanlık sayısı
+    // Toplam aktif alışkanlık sayısı (basit yaklaşım - şu anki aktif alışkanlıklar)
+    // İdealde her gün için o gün aktif olan alışkanlık sayısı hesaplanmalı
+    // Ancak şimdilik basitlik için toplam aktif sayısını dönüyoruz
+    // Frontend tarafında bu sayı kullanılacak veya calendarData içine eklenecek
     const totalHabits = db.prepare(`
       SELECT COUNT(*) as count FROM habits WHERE archived = 0
     `).get() as { count: number };
 
+    // Veriyi zenginleştir: Her gün için total_count ekle
+    // Not: Bu basit bir yaklaşım. Gerçekte geçmiş günler için o günkü aktif alışkanlık sayısı
+    // hesaplanmalı (created_at ve frequency'ye göre).
+    // Şimdilik tüm günler için şu anki toplam sayıyı kullanıyoruz.
+    const enrichedData = (calendarData as any[]).map(d => ({
+      ...d,
+      total_count: totalHabits.count
+    }));
+
     res.json({
-      data: calendarData,
+      data: enrichedData,
       totalHabits: totalHabits.count
     });
   } catch (error) {

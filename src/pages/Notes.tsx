@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, CalendarClock, GripVertical, Tag, StickyNote, Trash2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
@@ -30,19 +30,12 @@ const THEME_STYLES: Record<NoteTheme, { className: string; isDynamic?: boolean }
   slate: { className: 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/40 text-slate-900 dark:text-white' },
 };
 
-function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDelete: (id: string) => void; onNavigate: (id: string) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
-  
+function NoteCard({ note, onDelete, onNavigate, isOverlay = false, dragProps }: { note: NoteItem; onDelete?: (id: string) => void; onNavigate?: (id: string) => void; isOverlay?: boolean; dragProps?: any }) {
   const themeConfig = THEME_STYLES[note.theme] || THEME_STYLES.default;
   const isDynamicTheme = themeConfig.isDynamic;
-  
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Eğer sürükleme butonuna veya silme butonuna tıklandıysa navigate etme
+    if (isOverlay || !onNavigate) return;
     const target = e.target as HTMLElement;
     if (target.closest('[data-no-navigate]')) {
       return;
@@ -52,13 +45,11 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
       onClick={handleCardClick}
       className={`rounded-2xl border p-4 shadow-sm transition-all cursor-pointer group 
         ${isDynamicTheme ? 'bg-white dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] border-border-light dark:border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)]' : themeConfig.className}
         ${themeConfig.className}
-        ${isDragging ? 'opacity-50 scale-105' : ''}`}
+        ${isOverlay ? 'shadow-xl scale-105 cursor-grabbing' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -70,21 +61,22 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
           )}
         </div>
         <div className="flex items-center gap-1" data-no-navigate>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(note.id);
+              }}
+              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/10 hover:text-red-500"
+              title="Sil"
+              data-no-navigate
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(note.id);
-            }}
-            className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/10 hover:text-red-500"
-            title="Sil"
-            data-no-navigate
-          >
-            <Trash2 size={16} />
-          </button>
-          <button
-            className="p-1.5 rounded-lg cursor-grab hover:bg-black/5 dark:hover:bg-white/10"
-            {...attributes}
-            {...listeners}
+            className={`p-1.5 rounded-lg ${isOverlay ? 'cursor-grabbing' : 'cursor-grab'} hover:bg-black/5 dark:hover:bg-white/10`}
+            {...dragProps}
             data-no-navigate
           >
             <GripVertical size={16} />
@@ -111,6 +103,27 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
   );
 }
 
+function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDelete: (id: string) => void; onNavigate: (id: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
+  
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <NoteCard 
+        note={note} 
+        onDelete={onDelete} 
+        onNavigate={onNavigate} 
+        dragProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
 export default function Notes() {
   const navigate = useNavigate();
   const [notes, setNotes] = useState<NoteItem[]>(() => {
@@ -125,6 +138,7 @@ export default function Notes() {
     }
     return [];
   });
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; noteId: string | null }>({
     isOpen: false,
@@ -145,8 +159,14 @@ export default function Notes() {
     }
   }, [notes, isInitialized]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
+    
     if (!over || active.id === over.id) return;
     setNotes((items) => {
       const oldIndex = items.findIndex((n) => n.id === active.id);
@@ -173,6 +193,8 @@ export default function Notes() {
   const handleNavigateToNote = (id: string) => {
     navigate(`/notes/${id}`);
   };
+
+  const activeNote = activeId ? notes.find(n => n.id === activeId) : null;
 
   return (
     <div className="p-4">
@@ -218,8 +240,13 @@ export default function Notes() {
           </Link>
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={notes.map((n) => n.id)} strategy={verticalListSortingStrategy}>
+        <DndContext 
+          sensors={sensors} 
+          collisionDetection={closestCenter} 
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={notes.map((n) => n.id)} strategy={rectSortingStrategy}>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {notes.map((note) => (
                 <SortableNoteCard 
@@ -231,6 +258,11 @@ export default function Notes() {
               ))}
             </div>
           </SortableContext>
+          <DragOverlay>
+            {activeNote ? (
+              <NoteCard note={activeNote} isOverlay />
+            ) : null}
+          </DragOverlay>
         </DndContext>
       )}
 

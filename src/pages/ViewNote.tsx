@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Type, Hash, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Type, Hash, Trash2, Edit } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
 type NoteTheme = 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
@@ -201,6 +201,13 @@ export default function ViewNote() {
         </button>
         
         <div className="flex items-center gap-2">
+          <Link
+            to={`/notes/${id}/edit`}
+            className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all"
+            title="Düzenle"
+          >
+            <Edit size={18} />
+          </Link>
           <button
             onClick={handleDelete}
             className="p-2 rounded-lg text-gray-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"

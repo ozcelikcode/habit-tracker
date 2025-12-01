@@ -69,9 +69,12 @@ className="px-4 py-2 rounded-lg border transition-colors
 
 ### Kart Tasarımı
 ```tsx
-// Görev kartı
-className="flex items-start gap-4 p-4 rounded-xl border 
-  bg-white dark:bg-white/5 border-gray-200 dark:border-[#32675a]"
+// Görev kartı (Home)
+// Alışkanlık rengi tüm karta uygulanır (background %5, border %20 opaklık)
+style={{
+  backgroundColor: `color-mix(in srgb, ${habit.color} 5%, transparent)`,
+  borderColor: `color-mix(in srgb, ${habit.color} 20%, transparent)`
+}}
 ```
 
 ### Etiket (Badge) Pattern
@@ -135,7 +138,12 @@ className="hidden md:flex" // Desktop nav
 className="md:hidden"      // Mobile menu button
 ```
 
-## Veri Akışı
+### Veri Akışı
+
+### Seri Hesaplama (Streak Logic)
+- Seri, ardışık günlerde en az bir görevin tamamlanmasıyla artar.
+- **Tolerans**: Kullanıcı 3 gün boyunca hiçbir görev yapmazsa seri sıfırlanır (`diffDays <= 3`).
+- Bu hesaplama backend tarafında (`server/index.ts`) yapılır.
 
 ### Habit Toggle Flow
 1. Kullanıcı checkbox'a tıklar

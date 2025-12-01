@@ -261,7 +261,7 @@ export default function Pomodoro() {
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={toggleTimer}
-              className="flex items-center gap-2 px-8 py-4 bg-[var(--color-primary)] text-white dark:text-background-dark rounded-2xl font-bold text-lg hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-primary/20"
+              className="flex items-center gap-2 px-8 py-4 bg-[var(--color-primary)] text-white dark:text-background-dark rounded-2xl font-bold text-lg hover:opacity-90 transition-all active:scale-95 shadow-lg"
             >
               {isActive ? <Pause size={24} /> : <Play size={24} fill="currentColor" />}
               {isActive ? 'Duraklat' : 'Başlat'}

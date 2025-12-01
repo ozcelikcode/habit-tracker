@@ -74,6 +74,11 @@
 - [x] **Günlük İlerleme Takibi**: Süre düşümü artık günlük bazda yapılıyor ve duraklatma anında veritabanına işleniyor.
 - [x] **Detaylı Görev Görünümü**: Görev kartlarında tamamlanan/kalan süre bilgisi ve progress bar.
 
+### Home Sayfası İyileştirmeleri (1 Aralık 2025)
+- [x] **Süre Senkronizasyonu**: Home sayfasında kalan süre gösterimi `habit_daily_progress` ile senkronize edildi.
+- [x] **Seri Mantığı**: Seri sıfırlama toleransı 3 güne çıkarıldı.
+- [x] **Kart Tasarımı**: Görev kartları alışkanlık rengine göre dinamik olarak renklendirildi.
+
 ## 🔄 Bilinen Sorunlar
 - IDE'de `@tailwind` direktifi uyarısı (çalışmayı etkilemiyor)
 

@@ -5,6 +5,11 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 
 ## Son Yapılan Değişiklikler
 
+### Home Sayfası İyileştirmeleri (1 Aralık 2025)
+- **Süre Senkronizasyonu**: Home sayfasındaki görev kartları artık `habit_daily_progress` tablosundan kalan süreyi çekiyor. Pomodoro sayfasındaki ilerleme anlık olarak yansıyor.
+- **Görsel İyileştirme**: Görev kartları artık alışkanlığın kendi rengini (background ve border) tüm kutuya uyguluyor (`color-mix` ile opaklık ayarlı).
+- **Seri Mantığı Güncellemesi**: "Mevcut Seri" artık 1 gün değil, **3 gün** boyunca görev yapılmazsa sıfırlanıyor.
+
 ### Pomodoro Sayfası (1 Aralık 2025)
 - Yeni sayfa: `/pomodoro`
 - İkili flex yapı: Sol (Timer), Sağ (Zamanlı Görevler)

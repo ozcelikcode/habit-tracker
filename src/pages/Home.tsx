@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2, X, Bell, BellRing } from 'lucide-react';
-import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates, getNoteByDate } from '../api';
+import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates, getNoteByDate, getHabitProgress } from '../api';
 import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
 import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
 import ContributionCalendar from '../components/ContributionCalendar';
@@ -23,6 +23,7 @@ export default function Home() {
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteDates, setNoteDates] = useState<string[]>([]);
+  const [dailyProgress, setDailyProgress] = useState<Record<number, number>>({});
   const [selectedDay, setSelectedDay] = useState<{
     date: string;
     count: number;
@@ -100,7 +101,7 @@ export default function Home() {
   async function loadData() {
     try {
       // Her bir isteği ayrı ayrı catch bloğu ile sarmalayarak birinin hatasının diğerlerini etkilemesini engelliyoruz
-      const [habitsData, completionsData, statsData, calendarRes, settingsData, noteData, noteDatesData] = await Promise.all([
+      const [habitsData, completionsData, statsData, calendarRes, settingsData, noteData, noteDatesData, progressData] = await Promise.all([
         getHabits().catch(e => {
           console.error('Alışkanlıklar yüklenemedi:', e);
           return [];
@@ -129,6 +130,10 @@ export default function Home() {
           console.error('Not tarihleri yüklenemedi:', e);
           return [];
         }),
+        getHabitProgress(today).catch(e => {
+          console.error('İlerleme yüklenemedi:', e);
+          return [];
+        }),
       ]);
 
       setHabits(habitsData);
@@ -139,6 +144,12 @@ export default function Home() {
       setSettings(settingsData);
       setDailyNote(noteData);
       setNoteDates(noteDatesData.map((n: any) => n.note_date));
+      
+      const progressMap: Record<number, number> = {};
+      progressData.forEach((p: any) => {
+        progressMap[p.habit_id] = p.remaining_minutes;
+      });
+      setDailyProgress(progressMap);
     } catch (error) {
       console.error('Genel veri yükleme hatası:', error);
     } finally {
@@ -466,6 +477,7 @@ export default function Home() {
               ) : (
                 todaysHabits.map((habit) => {
                   const isCompleted = completedHabitIds.has(habit.id);
+                  const remaining = dailyProgress[habit.id] !== undefined ? dailyProgress[habit.id] : (habit.duration_minutes || 0);
 
                   return (
                     <div
@@ -473,8 +485,12 @@ export default function Home() {
                       className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
                         isCompleted 
                           ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-[#32675a]/50' 
-                          : 'bg-white dark:bg-white/5 border-gray-200 dark:border-[#32675a] hover:border-primary/30'
+                          : 'border-gray-200 dark:border-[#32675a] hover:border-primary/30'
                       }`}
+                      style={!isCompleted ? {
+                        backgroundColor: `color-mix(in srgb, ${habit.color} 5%, transparent)`,
+                        borderColor: `color-mix(in srgb, ${habit.color} 20%, transparent)`
+                      } : undefined}
                     >
                       {/* Checkbox */}
                       <label className="flex items-center cursor-pointer mt-1">
@@ -545,7 +561,12 @@ export default function Home() {
                               isCompleted 
                                 ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
                                 : 'bg-primary/10 text-primary'
-                            }`}>
+                            }`}
+                            style={!isCompleted ? {
+                                backgroundColor: `color-mix(in srgb, ${habit.color} 10%, transparent)`,
+                                color: habit.color
+                            } : undefined}
+                            >
                               <Clock size={14} />
                               {habit.scheduled_time}
                             </span>
@@ -562,9 +583,14 @@ export default function Home() {
                               isCompleted 
                                 ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
                                 : 'bg-accent-orange/10 text-accent-orange'
-                            }`}>
+                            }`}
+                            style={!isCompleted ? {
+                                backgroundColor: `color-mix(in srgb, ${habit.color} 10%, transparent)`,
+                                color: habit.color
+                            } : undefined}
+                            >
                               <Timer size={14} />
-                              {formatDuration(habit.duration_minutes)}
+                              {formatDuration(remaining)}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">

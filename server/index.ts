@@ -234,7 +234,9 @@ app.get('/api/stats', (req, res) => {
       const recordDate = new Date(record.completed_date);
       const diffDays = Math.floor((checkDate.getTime() - recordDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (diffDays <= 1) {
+      // 3 gün kuralı: 3 günden fazla ara verilirse seri bozulur
+      // Yani fark 3 veya daha az ise seri devam eder (0=aynı gün, 1=ertesi gün, 2=1 gün ara, 3=2 gün ara)
+      if (diffDays <= 3) {
         currentStreak++;
         checkDate = recordDate;
       } else {

@@ -4,12 +4,99 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
 
+/* CSS Custom Properties for dynamic theming */
+:root {
+  --color-primary: #2EAC8A;
+  --color-primary-dark: #0E7C5D;
+  --color-bg-dark: #10221d;
+  --color-border-dark: #32675a;
+}
+
 /* Focus ring for checkboxes */
 input[type="checkbox"] {
-  accent-color: #2EAC8A;
+  accent-color: var(--color-primary);
 }
 
 input[type="checkbox"]:focus {
-  outline: 2px solid #2EAC8A;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* Dynamic primary color utilities */
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.ring-primary {
+  --tw-ring-color: var(--color-primary) !important;
+}
+
+.focus\:ring-primary:focus {
+  --tw-ring-color: var(--color-primary) !important;
+}
+
+/* Primary color with opacity */
+.bg-primary\/10 {
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+}
+
+.bg-primary\/20 {
+  background-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+}
+
+.hover\:bg-primary\/20:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+}
+
+/* Focus ring utilities */
+.focus\:border-primary:focus {
+  border-color: var(--color-primary) !important;
+}
+
+/* Dynamic background color - dark mode */
+.dark .bg-background-dark {
+  background-color: var(--color-bg-dark) !important;
+}
+
+/* Dynamic border color */
+.dark .border-\[\#32675a\] {
+  border-color: var(--color-border-dark) !important;
+}
+
+.dark .dark\:border-\[\#32675a\] {
+  border-color: var(--color-border-dark) !important;
+}
+
+.dark .dark\:border-\[\#32675a\]\/50 {
+  border-color: color-mix(in srgb, var(--color-border-dark) 50%, transparent) !important;
+}
+
+.dark .border-\[\#23483f\] {
+  border-color: var(--color-border-dark) !important;
+}
+
+.dark .dark\:border-\[\#23483f\] {
+  border-color: var(--color-border-dark) !important;
+}
+
+/* Contribution calendar dynamic colors */
+.calendar-level-1 {
+  background-color: color-mix(in srgb, var(--color-primary) 25%, transparent) !important;
+}
+.calendar-level-2 {
+  background-color: color-mix(in srgb, var(--color-primary) 50%, transparent) !important;
+}
+.calendar-level-3 {
+  background-color: color-mix(in srgb, var(--color-primary) 75%, transparent) !important;
+}
+.calendar-level-4 {
+  background-color: var(--color-primary) !important;
 }

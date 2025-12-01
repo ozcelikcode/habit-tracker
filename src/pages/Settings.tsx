@@ -159,7 +159,12 @@ export default function Settings() {
                 <button
                   key={color.value}
                   type="button"
-                  onClick={() => setSettings({ ...settings, accentColor: color.value })}
+                  onClick={() => {
+                    setSettings({ ...settings, accentColor: color.value });
+                    // Anında rengi uygula
+                    document.documentElement.style.setProperty('--color-primary', color.value);
+                    window.dispatchEvent(new CustomEvent('accentColorChange', { detail: { accentColor: color.value } }));
+                  }}
                   className={`group relative size-10 rounded-full transition-all hover:scale-110 ${color.class} ${
                     settings.accentColor === color.value || (!settings.accentColor && color.value === '#2EAC8A')
                       ? 'ring-2 ring-offset-2 ring-gray-800 dark:ring-white ring-offset-gray-100 dark:ring-offset-gray-800 scale-110'

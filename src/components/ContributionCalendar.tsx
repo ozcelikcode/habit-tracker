@@ -63,14 +63,14 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
 
   const [hoveredCell, setHoveredCell] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
 
-  // Renk seviyeleri - açık ve koyu tema için uyumlu
+  // Renk seviyeleri - dinamik CSS değişkenleri kullanır
   const getLevelClass = (level: number) => {
     const classes = [
-      'bg-gray-300 dark:bg-white/10',                    // level 0 - boş
-      'bg-emerald-200 dark:bg-emerald-900/60',           // level 1
-      'bg-emerald-400 dark:bg-emerald-600/80',           // level 2
-      'bg-emerald-500 dark:bg-emerald-500',              // level 3
-      'bg-emerald-700 dark:bg-emerald-400',              // level 4 - en koyu
+      'bg-gray-300 dark:bg-white/10',           // level 0 - boş
+      'calendar-level-1',                        // level 1
+      'calendar-level-2',                        // level 2
+      'calendar-level-3',                        // level 3
+      'calendar-level-4',                        // level 4 - en koyu
     ];
     return classes[level] || classes[0];
   };
@@ -105,7 +105,10 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
   }, [calendarCells, firstDayOffset]);
 
   return (
-    <div className="p-3 sm:p-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl overflow-x-auto">
+    <div 
+      className="p-3 sm:p-4 bg-gray-100 dark:bg-white/5 border border-gray-200 rounded-xl overflow-x-auto"
+      style={{ borderColor: 'var(--color-border-dark)' }}
+    >
       {/* Ay isimleri */}
       <div className="flex text-[10px] sm:text-xs text-gray-500 dark:text-white/50 mb-2 min-w-[600px]">
         <div className="w-6 sm:w-8 flex-shrink-0" /> {/* Boşluk için */}
@@ -189,10 +192,10 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
         <span>Az</span>
         <div className="flex items-center gap-1 sm:gap-2">
           <div className="size-2.5 sm:size-3 rounded-sm bg-gray-300 dark:bg-white/10" />
-          <div className="size-2.5 sm:size-3 rounded-sm bg-emerald-200 dark:bg-emerald-900/60" />
-          <div className="size-2.5 sm:size-3 rounded-sm bg-emerald-400 dark:bg-emerald-600/80" />
-          <div className="size-2.5 sm:size-3 rounded-sm bg-emerald-500 dark:bg-emerald-500" />
-          <div className="size-2.5 sm:size-3 rounded-sm bg-emerald-700 dark:bg-emerald-400" />
+          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-1" />
+          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-2" />
+          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-3" />
+          <div className="size-2.5 sm:size-3 rounded-sm calendar-level-4" />
         </div>
         <span>Çok</span>
       </div>

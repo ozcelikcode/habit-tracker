@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, ChevronDown, Check, Plus } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, Check, Plus, AlertCircle } from 'lucide-react';
 
-type NoteTheme = 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
+type NoteTheme = 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
 
 // Editor container ref ile bağlanacak
 
@@ -18,7 +18,8 @@ interface NoteItem {
   sentenceCount: number;
 }
 
-const THEME_CLASSES: Record<NoteTheme, { bg: string; name: string }> = {
+const THEME_CLASSES: Record<NoteTheme, { bg: string; name: string; isDynamic?: boolean }> = {
+  default: { bg: 'var(--color-primary)', name: 'Varsayılan', isDynamic: true },
   emerald: { bg: '#10B981', name: 'Zümrüt' },
   blue: { bg: '#0EA5E9', name: 'Mavi' },
   amber: { bg: '#F59E0B', name: 'Amber' },
@@ -93,8 +94,9 @@ export default function NewNote() {
   const [newCategory, setNewCategory] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
-  const [theme, setTheme] = useState<NoteTheme>('emerald');
+  const [theme, setTheme] = useState<NoteTheme>('default');
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<{ title?: string; content?: string }>({});
   
   const editorRef = useRef<any>(null);
   const editorContainerRef = useRef<HTMLDivElement | null>(null);
@@ -230,33 +232,46 @@ export default function NewNote() {
   async function handleSaveNote() {
     if (saving) return;
     
+    // Validation
+    const newErrors: { title?: string; content?: string } = {};
+    
+    if (!title.trim()) {
+      newErrors.title = 'Başlık boş bırakılamaz';
+    }
+    
+    // Editor içeriğini kontrol et
+    let savedData = { blocks: [] as any[] };
+    if (editorRef.current) {
+      try {
+        await editorRef.current.isReady;
+        savedData = await editorRef.current.save();
+      } catch (e) {
+        console.warn('Editor save hatası:', e);
+      }
+    }
+    
+    const plainText = extractPlainText(savedData.blocks);
+    
+    if (!plainText.trim()) {
+      newErrors.content = 'İçerik boş bırakılamaz';
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
     setSaving(true);
     
     try {
-      let savedData = { blocks: [] };
-      
-      // Editor varsa içeriği al
-      if (editorRef.current) {
-        try {
-          await editorRef.current.isReady;
-          savedData = await editorRef.current.save();
-        } catch (e) {
-          console.warn('Editor save hatası:', e);
-        }
-      }
-      
-      console.log('Editor saved data:', savedData); // Debug için
-      
-      const plainText = extractPlainText(savedData.blocks);
-      console.log('Extracted plain text:', plainText); // Debug için
-      
       const charCount = plainText.length;
       const sentenceCount = countSentences(plainText);
       const createdAt = formatDateHuman(new Date());
 
       const newNote: NoteItem = {
         id: crypto.randomUUID(),
-        title: title.trim() || 'Başlıksız',
+        title: title.trim(),
         category: category.trim(),
         theme,
         content: savedData,
@@ -323,16 +338,29 @@ export default function NewNote() {
             </label>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 dark:border-[#32675a] bg-white dark:bg-white/5 px-4 py-3 text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
+              }}
+              className={`w-full rounded-xl border bg-white dark:bg-white/5 px-4 py-3 text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${
+                errors.title 
+                  ? 'border-red-500 dark:border-red-500' 
+                  : 'border-gray-300 dark:border-[#32675a]'
+              }`}
               placeholder="Örn: Haftalık hedefler"
             />
+            {errors.title && (
+              <div className="flex items-center gap-1.5 mt-2 text-red-500 text-xs">
+                <AlertCircle size={14} />
+                {errors.title}
+              </div>
+            )}
           </div>
 
           {/* Category - Custom Dropdown */}
           <div ref={dropdownRef}>
             <label className="text-sm font-medium text-gray-700 dark:text-white/80 mb-2 block">
-              Kategori
+              Kategori <span className="text-gray-400 dark:text-white/30 font-normal">(opsiyonel)</span>
             </label>
             <div className="relative">
               <button
@@ -350,7 +378,10 @@ export default function NewNote() {
               </button>
 
               {showCategoryDropdown && (
-                <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 dark:border-[#32675a] bg-white dark:bg-[#1a3830] shadow-lg overflow-hidden">
+                <div 
+                  className="absolute z-20 mt-2 w-full rounded-xl border bg-white dark:bg-zinc-900 shadow-lg overflow-hidden"
+                  style={{ borderColor: 'var(--color-border-dark)' }}
+                >
                   <div className="max-h-48 overflow-y-auto">
                     {/* Clear selection */}
                     <button
@@ -381,14 +412,17 @@ export default function NewNote() {
                   </div>
                   
                   {/* Add new category */}
-                  <div className="border-t border-gray-200 dark:border-[#32675a]">
+                  <div 
+                    className="border-t"
+                    style={{ borderColor: 'var(--color-border-dark)' }}
+                  >
                     {showNewCategoryInput ? (
-                      <div className="p-3 flex gap-2">
+                      <div className="p-3 flex gap-2 bg-gray-50 dark:bg-black/20">
                         <input
                           value={newCategory}
                           onChange={(e) => setNewCategory(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                          className="flex-1 rounded-lg border border-gray-300 dark:border-[#32675a] bg-white dark:bg-white/5 px-3 py-2 text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="flex-1 rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-white/10 px-3 py-2 text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary"
                           placeholder="Yeni kategori adı"
                           autoFocus
                         />
@@ -422,20 +456,31 @@ export default function NewNote() {
               Tema Rengi
             </label>
             <div className="flex gap-2 items-center h-[46px]">
-              {(Object.keys(THEME_CLASSES) as NoteTheme[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTheme(t)}
-                  className={`h-9 w-9 rounded-full border-2 transition-all ${
-                    theme === t 
-                      ? 'scale-110 border-primary ring-2 ring-primary/30' 
-                      : 'border-transparent hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: THEME_CLASSES[t].bg }}
-                  title={THEME_CLASSES[t].name}
-                />
-              ))}
+              {(Object.keys(THEME_CLASSES) as NoteTheme[]).map((t) => {
+                const themeConfig = THEME_CLASSES[t];
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTheme(t)}
+                    className={`h-9 w-9 rounded-full border-2 transition-all relative ${
+                      theme === t 
+                        ? 'scale-110 ring-2 ring-white/50 dark:ring-white/30' 
+                        : 'border-transparent hover:scale-105'
+                    } ${theme === t ? 'border-white dark:border-white/50' : ''}`}
+                    style={{ 
+                      backgroundColor: themeConfig.isDynamic 
+                        ? 'var(--color-primary)' 
+                        : themeConfig.bg 
+                    }}
+                    title={themeConfig.name}
+                  >
+                    {theme === t && (
+                      <Check size={16} className="absolute inset-0 m-auto text-white" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -447,8 +492,18 @@ export default function NewNote() {
           </label>
           <div
             ref={editorContainerRef}
-            className="min-h-[400px] rounded-xl border border-gray-200 dark:border-[#32675a] bg-white dark:bg-white/5 p-4"
+            className={`min-h-[400px] rounded-xl border bg-white dark:bg-white/5 p-4 ${
+              errors.content 
+                ? 'border-red-500 dark:border-red-500' 
+                : 'border-gray-200 dark:border-[#32675a]'
+            }`}
           />
+          {errors.content && (
+            <div className="flex items-center gap-1.5 mt-2 text-red-500 text-xs">
+              <AlertCircle size={14} />
+              {errors.content}
+            </div>
+          )}
         </div>
 
         {/* Tips */}

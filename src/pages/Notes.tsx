@@ -4,8 +4,9 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type D
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, CalendarClock, GripVertical, Tag, StickyNote, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
-type NoteTheme = 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
+type NoteTheme = 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
 
 interface NoteItem {
   id: string;
@@ -20,19 +21,28 @@ interface NoteItem {
 }
 
 // Zarif, koyu tonlu tema renkleri - tüm kart boyancak
-const THEME_STYLES: Record<NoteTheme, string> = {
-  emerald: 'bg-emerald-950/60 border-emerald-800/40 hover:border-emerald-700/60',
-  blue: 'bg-sky-950/60 border-sky-800/40 hover:border-sky-700/60',
-  amber: 'bg-amber-950/60 border-amber-800/40 hover:border-amber-700/60',
-  rose: 'bg-rose-950/60 border-rose-800/40 hover:border-rose-700/60',
-  slate: 'bg-slate-900/60 border-slate-700/40 hover:border-slate-600/60',
+const THEME_STYLES: Record<NoteTheme, { className: string; isDynamic?: boolean }> = {
+  default: { className: '', isDynamic: true },
+  emerald: { className: 'bg-emerald-950/60 border-emerald-800/40 hover:border-emerald-700/60' },
+  blue: { className: 'bg-sky-950/60 border-sky-800/40 hover:border-sky-700/60' },
+  amber: { className: 'bg-amber-950/60 border-amber-800/40 hover:border-amber-700/60' },
+  rose: { className: 'bg-rose-950/60 border-rose-800/40 hover:border-rose-700/60' },
+  slate: { className: 'bg-slate-900/60 border-slate-700/40 hover:border-slate-600/60' },
 };
 
 function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDelete: (id: string) => void; onNavigate: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
-  const style = {
+  
+  const themeConfig = THEME_STYLES[note.theme] || THEME_STYLES.default;
+  const isDynamicTheme = themeConfig.isDynamic;
+  
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
+    ...(isDynamicTheme ? {
+      backgroundColor: 'color-mix(in srgb, var(--color-primary) 20%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-primary) 40%, transparent)'
+    } : {})
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -50,7 +60,7 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
       style={style}
       onClick={handleCardClick}
       className={`rounded-2xl border p-4 shadow-sm transition-all cursor-pointer group 
-        ${THEME_STYLES[note.theme]}
+        ${isDynamicTheme ? '' : themeConfig.className}
         ${isDragging ? 'opacity-50 scale-105' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -119,6 +129,10 @@ export default function Notes() {
     return [];
   });
   const [isInitialized, setIsInitialized] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; noteId: string | null }>({
+    isOpen: false,
+    noteId: null
+  });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -145,9 +159,18 @@ export default function Notes() {
   };
 
   const handleDeleteNote = (id: string) => {
-    if (window.confirm('Bu notu silmek istediğinize emin misiniz?')) {
-      setNotes((prev) => prev.filter((n) => n.id !== id));
+    setDeleteModal({ isOpen: true, noteId: id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteModal.noteId) {
+      setNotes((prev) => prev.filter((n) => n.id !== deleteModal.noteId));
     }
+    setDeleteModal({ isOpen: false, noteId: null });
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, noteId: null });
   };
 
   const handleNavigateToNote = (id: string) => {
@@ -213,6 +236,18 @@ export default function Notes() {
           </SortableContext>
         </DndContext>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Notu Sil"
+        message="Bu notu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        confirmText="Sil"
+        cancelText="İptal"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        variant="danger"
+      />
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Type, Hash, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
-type NoteTheme = 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
+type NoteTheme = 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
 
 interface NoteItem {
   id: string;
@@ -17,7 +18,13 @@ interface NoteItem {
 }
 
 // Zarif, koyu tonlu tema renkleri
-const THEME_STYLES: Record<NoteTheme, { bg: string; border: string; accent: string }> = {
+const THEME_STYLES: Record<NoteTheme, { bg: string; border: string; accent: string; isDynamic?: boolean }> = {
+  default: {
+    bg: '',
+    border: '',
+    accent: 'var(--color-primary)',
+    isDynamic: true
+  },
   emerald: { 
     bg: 'bg-emerald-950/40 dark:bg-emerald-950/50', 
     border: 'border-emerald-800/50',
@@ -121,6 +128,7 @@ export default function ViewNote() {
   const navigate = useNavigate();
   const [note, setNote] = useState<NoteItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('custom-notes');
@@ -137,15 +145,17 @@ export default function ViewNote() {
   }, [id]);
 
   const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
     if (!note) return;
-    if (window.confirm('Bu notu silmek istediğinize emin misiniz?')) {
-      const stored = localStorage.getItem('custom-notes');
-      if (stored) {
-        const notes: NoteItem[] = JSON.parse(stored);
-        const updated = notes.filter((n) => n.id !== note.id);
-        localStorage.setItem('custom-notes', JSON.stringify(updated));
-        navigate('/notes');
-      }
+    const stored = localStorage.getItem('custom-notes');
+    if (stored) {
+      const notes: NoteItem[] = JSON.parse(stored);
+      const updated = notes.filter((n) => n.id !== note.id);
+      localStorage.setItem('custom-notes', JSON.stringify(updated));
+      navigate('/notes');
     }
   };
 
@@ -175,8 +185,9 @@ export default function ViewNote() {
     );
   }
 
-  const themeStyle = THEME_STYLES[note.theme];
+  const themeStyle = THEME_STYLES[note.theme] || THEME_STYLES.default;
   const blocks = note.content?.blocks || [];
+  const isDynamicTheme = themeStyle.isDynamic;
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
@@ -201,7 +212,17 @@ export default function ViewNote() {
       </div>
 
       {/* Note Card */}
-      <div className={`rounded-2xl border ${themeStyle.bg} ${themeStyle.border} p-6 md:p-8`}>
+      <div 
+        className={`rounded-2xl border p-6 md:p-8 ${
+          isDynamicTheme 
+            ? 'border-[var(--color-border-dark)]' 
+            : `${themeStyle.bg} ${themeStyle.border}`
+        }`}
+        style={isDynamicTheme ? {
+          backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--color-primary) 40%, transparent)'
+        } : undefined}
+      >
         {/* Title */}
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
           {note.title}
@@ -237,6 +258,18 @@ export default function ViewNote() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Notu Sil"
+        message="Bu notu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        confirmText="Sil"
+        cancelText="İptal"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        variant="danger"
+      />
     </div>
   );
 }

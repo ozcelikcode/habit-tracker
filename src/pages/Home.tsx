@@ -318,7 +318,7 @@ export default function Home() {
           <p className="text-gray-800 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
             Merhaba, {settings.username}!
           </p>
-          <p className="text-emerald-600 dark:text-[#92c9bb] text-base font-normal leading-normal">
+          <p className="text-[var(--color-primary)] dark:text-[color-mix(in_srgb,var(--color-primary)_70%,white)] text-base font-normal leading-normal">
             Alışkanlık takviminize hoş geldiniz.
           </p>
         </div>

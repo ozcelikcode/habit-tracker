@@ -234,13 +234,16 @@ export default function Settings() {
 
         {/* Hakkında */}
         <div className="p-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#32675a] rounded-xl">
-          <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Hakkında</h3>
+          <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Info</h3>
           <div className="space-y-2 text-gray-600 dark:text-white/60">
             <p>
-              <span className="text-gray-800 dark:text-white/80">Versiyon:</span> 1.0.4
+              <span className="text-gray-800 dark:text-white/80">Version:</span> 1.0.6
             </p>
             <p>
-              <span className="text-gray-800 dark:text-white/80">Geliştirici:</span> ozcelik & Claude Opus 4.5
+              <span className="text-gray-800 dark:text-white/80">Developer:</span> ozcelik
+            </p>
+            <p>
+              <span className="text-gray-800 dark:text-white/80">Tools & Ai:</span> Claude Opus 4.5, Gemini 3 Pro, ChatGPT 5.1 Codex
             </p>
           </div>
         </div>

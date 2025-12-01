@@ -64,6 +64,14 @@
 - [x] İçerik çıkarımı düzeltildi (HTML temizleme)
 - [x] LocalStorage depolama
 
+### Pomodoro Sistemi (1 Aralık 2025)
+- [x] Pomodoro sayfası (`Pomodoro.tsx`)
+- [x] Timer mantığı (Başlat/Duraklat/Sıfırla)
+- [x] Hazır süre butonları
+- [x] Zamanlı görev filtreleme ve listeleme
+- [x] Görev tamamlama entegrasyonu
+- [x] Navbar entegrasyonu
+
 ## 🔄 Bilinen Sorunlar
 - IDE'de `@tailwind` direktifi uyarısı (çalışmayı etkilemiyor)
 

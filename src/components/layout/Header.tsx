@@ -53,6 +53,18 @@ export default function Header({ theme }: HeaderProps) {
             Alışkanlıklarım
           </NavLink>
           <NavLink
+            to="/pomodoro"
+            className={({ isActive }) =>
+              `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                isActive 
+                  ? 'bg-primary text-white' 
+                  : (isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100')
+              }`
+            }
+          >
+            Pomodoro
+          </NavLink>
+          <NavLink
             to="/settings"
             className={({ isActive }) =>
               `px-4 py-2 rounded-full text-sm font-medium transition-all ${
@@ -119,6 +131,19 @@ export default function Header({ theme }: HeaderProps) {
             }
           >
             Alışkanlıklarım
+          </NavLink>
+          <NavLink
+            to="/pomodoro"
+            onClick={() => setMobileMenuOpen(false)}
+            className={({ isActive }) =>
+              `px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                isActive 
+                  ? 'bg-primary text-white' 
+                  : (isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100')
+              }`
+            }
+          >
+            Pomodoro
           </NavLink>
           <NavLink
             to="/settings"

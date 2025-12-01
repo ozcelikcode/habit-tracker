@@ -34,6 +34,12 @@ Kullanıcıların günlük alışkanlıklarını görsel olarak takip edebilmele
 - Tema modu (koyu/açık)
 - Vurgu rengi seçimi (8 renk)
 
+### Pomodoro Odak
+- Odaklanma zamanlayıcısı
+- Hazır süre seçenekleri (5-25 dk)
+- Zamanlı görevlerin listesi
+- Görev tamamlama entegrasyonu
+
 ## Görsel Tasarım İlkeleri
 
 ### Renk Paleti
@@ -73,6 +79,12 @@ Kullanıcıların günlük alışkanlıklarını görsel olarak takip edebilmele
 2. Koyu/Açık tema seç
 3. Vurgu rengi seç
 4. "Değişiklikleri Kaydet"
+
+### Pomodoro Kullanımı
+1. Navbar'dan Pomodoro sayfasına git
+2. Süre seç (örn. 25 dk)
+3. "Başlat" butonuna bas
+4. Sağ panelden zamanı gelen görevi tamamla
 
 ## Mobil Deneyim
 - Responsive navbar (hamburger menü)

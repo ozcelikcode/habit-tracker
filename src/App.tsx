@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import Notes from './pages/Notes';
 import NewNote from './pages/NewNote';
 import ViewNote from './pages/ViewNote';
+import Pomodoro from './pages/Pomodoro';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="notes" element={<Notes />} />
           <Route path="notes/new" element={<NewNote />} />
           <Route path="notes/:id" element={<ViewNote />} />
+          <Route path="pomodoro" element={<Pomodoro />} />
         </Route>
       </Routes>
     </BrowserRouter>

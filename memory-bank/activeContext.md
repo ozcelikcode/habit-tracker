@@ -5,6 +5,19 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 
 ## Son Yapılan Değişiklikler
 
+### Pomodoro Sayfası (1 Aralık 2025)
+- Yeni sayfa: `/pomodoro`
+- İkili flex yapı: Sol (Timer), Sağ (Zamanlı Görevler)
+- **Timer Özellikleri**:
+  - 5, 10, 15, 20, 25 dk hazır süreler
+  - Başlat/Duraklat/Sıfırla kontrolleri
+  - Dairesel ilerleme göstergesi (SVG)
+  - Site accent rengi ile uyumlu
+- **Görev Entegrasyonu**:
+  - Sadece bugünün ve *saati olan* görevleri listelenir
+  - Görev tamamlama/geri alma özelliği
+  - Tamamlanan görevler listede kalır (üzeri çizili)
+
 ### Dinamik Tema Renk Sistemi (1 Aralık 2025)
 - Site genelinde accent renk değişimi tam entegrasyon:
   - Arka plan rengi seçilen renge göre otomatik koyu ton oluşturuyor (HSL dönüşümü)

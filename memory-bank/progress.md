@@ -71,6 +71,8 @@
 - [x] Zamanlı görev filtreleme ve listeleme
 - [x] Görev tamamlama entegrasyonu
 - [x] Navbar entegrasyonu
+- [x] **Günlük İlerleme Takibi**: Süre düşümü artık günlük bazda yapılıyor ve duraklatma anında veritabanına işleniyor.
+- [x] **Detaylı Görev Görünümü**: Görev kartlarında tamamlanan/kalan süre bilgisi ve progress bar.
 
 ## 🔄 Bilinen Sorunlar
 - IDE'de `@tailwind` direktifi uyarısı (çalışmayı etkilemiyor)

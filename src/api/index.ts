@@ -41,6 +41,21 @@ export async function deleteHabit(id: number): Promise<void> {
   if (!res.ok) throw new Error('Alışkanlık silinemedi');
 }
 
+export async function getHabitProgress(date: string): Promise<{ habit_id: number; remaining_minutes: number }[]> {
+  const res = await fetch(`${API_BASE}/habits/progress?date=${date}`);
+  if (!res.ok) throw new Error('İlerleme getirilemedi');
+  return res.json();
+}
+
+export async function updateHabitProgress(id: number, date: string, remaining_minutes: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/habits/${id}/progress`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, remaining_minutes }),
+  });
+  if (!res.ok) throw new Error('İlerleme güncellenemedi');
+}
+
 // ============ COMPLETIONS ============
 
 export async function getCompletions(params?: {

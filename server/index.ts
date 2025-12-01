@@ -10,6 +10,40 @@ app.use(express.json());
 
 // ============ HABITS API ============
 
+// Günlük ilerlemeyi getir
+app.get('/api/habits/progress', (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ error: 'Tarih gerekli' });
+
+    const progress = db.prepare('SELECT * FROM habit_daily_progress WHERE progress_date = ?').all(date);
+    res.json(progress);
+  } catch (error) {
+    res.status(500).json({ error: 'İlerleme getirilemedi' });
+  }
+});
+
+// Günlük ilerlemeyi güncelle
+app.post('/api/habits/:id/progress', (req, res) => {
+  try {
+    const { date, remaining_minutes } = req.body;
+    if (!date || remaining_minutes === undefined) {
+      return res.status(400).json({ error: 'Tarih ve süre gerekli' });
+    }
+
+    db.prepare(`
+      INSERT INTO habit_daily_progress (habit_id, progress_date, remaining_minutes)
+      VALUES (?, ?, ?)
+      ON CONFLICT(habit_id, progress_date) 
+      DO UPDATE SET remaining_minutes = ?, updated_at = CURRENT_TIMESTAMP
+    `).run(req.params.id, date, remaining_minutes, remaining_minutes);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'İlerleme güncellenemedi' });
+  }
+});
+
 // Tüm alışkanlıkları getir
 app.get('/api/habits', (req, res) => {
   try {

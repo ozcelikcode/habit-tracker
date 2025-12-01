@@ -9,12 +9,18 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 - Yeni sayfa: `/pomodoro`
 - İkili flex yapı: Sol (Timer), Sağ (Zamanlı Görevler)
 - **Timer Özellikleri**:
-  - 5, 10, 15, 20, 25 dk hazır süreler
+  - 5-60 dk arası 5'er dakikalık hazır süreler
   - Başlat/Duraklat/Sıfırla kontrolleri
   - Dairesel ilerleme göstergesi (SVG)
   - Site accent rengi ile uyumlu
 - **Görev Entegrasyonu**:
   - Sadece bugünün ve *saati olan* görevleri listelenir
+  - Görev seçimi ve görsel vurgulama (border)
+  - **Günlük İlerleme Takibi (V3)**:
+    - Süre düşümü artık alışkanlığın kalıcı süresinden değil, o güne özel `habit_daily_progress` tablosundan yapılır.
+    - Timer duraklatıldığında, durdurulduğunda veya görev değiştirildiğinde süre *anında* düşülür.
+    - Optimistik UI güncellemeleri ile anlık geri bildirim.
+    - **Detaylı Görev Kartları**: Görev listesinde "X dk yapıldı", "Y dk kaldı" bilgileri ve görsel progress bar eklendi.
   - Görev tamamlama/geri alma özelliği
   - Tamamlanan görevler listede kalır (üzeri çizili)
 

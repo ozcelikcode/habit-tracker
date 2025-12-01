@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Play, Pause, RotateCcw, Clock, CheckCircle2, Circle } from 'lucide-react';
-import { getHabits, getCompletions, completeHabit, uncompleteHabit } from '../api';
+import { getHabits, getCompletions, completeHabit, uncompleteHabit, getHabitProgress, updateHabitProgress } from '../api';
 import type { Habit, Completion } from '../types';
 import { HABIT_ICON_MAP } from '../icons/habitIcons';
 
@@ -9,10 +9,16 @@ export default function Pomodoro() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [initialTime, setInitialTime] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
+  const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
+  
+  // Session Tracking
+  const sessionStartRef = useRef<number>(25 * 60);
+  const pendingSecondsRef = useRef<number>(0);
   
   // Data State
   const [habits, setHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState<Completion[]>([]);
+  const [dailyProgress, setDailyProgress] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().split('T')[0];
@@ -24,18 +30,59 @@ export default function Pomodoro() {
 
   async function loadData() {
     try {
-      const [habitsData, completionsData] = await Promise.all([
+      const [habitsData, completionsData, progressData] = await Promise.all([
         getHabits(),
-        getCompletions({ start_date: today, end_date: today })
+        getCompletions({ start_date: today, end_date: today }),
+        getHabitProgress(today)
       ]);
       setHabits(habitsData);
       setCompletions(completionsData);
+      
+      const progressMap: Record<number, number> = {};
+      progressData.forEach(p => {
+        progressMap[p.habit_id] = p.remaining_minutes;
+      });
+      setDailyProgress(progressMap);
     } catch (error) {
       console.error('Veri yüklenemedi:', error);
     } finally {
       setLoading(false);
     }
   }
+
+  const getRemainingTime = (habit: Habit) => {
+    if (dailyProgress[habit.id] !== undefined) {
+      return dailyProgress[habit.id];
+    }
+    return habit.duration_minutes || 0;
+  };
+
+  const deductTime = async (seconds: number, habitId: number) => {
+    if (seconds <= 0) return;
+    
+    pendingSecondsRef.current += seconds;
+    const minutesToDeduct = Math.floor(pendingSecondsRef.current / 60);
+    
+    if (minutesToDeduct > 0) {
+      pendingSecondsRef.current %= 60;
+      
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+
+      const currentRemaining = getRemainingTime(habit);
+      const newRemaining = Math.max(0, currentRemaining - minutesToDeduct);
+      
+      // Optimistic update
+      setDailyProgress(prev => ({ ...prev, [habitId]: newRemaining }));
+      
+      try {
+        await updateHabitProgress(habitId, today, newRemaining);
+      } catch (err) {
+        console.error('İlerleme kaydedilemedi:', err);
+        // Revert logic could go here
+      }
+    }
+  };
 
   // Timer Logic
   useEffect(() => {
@@ -45,26 +92,57 @@ export default function Pomodoro() {
       interval = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isActive) {
+      // Timer finished naturally
+      if (selectedHabitId) {
+        const spent = sessionStartRef.current - timeLeft; // Should be full duration
+        deductTime(spent, selectedHabitId);
+      }
       setIsActive(false);
-      // Optional: Play sound or notification
+      // Optional: Play sound
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, selectedHabitId]);
 
-  const toggleTimer = () => setIsActive(!isActive);
+  const toggleTimer = () => {
+    if (isActive) {
+      // Pausing
+      if (selectedHabitId) {
+        const spent = sessionStartRef.current - timeLeft;
+        deductTime(spent, selectedHabitId);
+      }
+    } else {
+      // Starting
+      sessionStartRef.current = timeLeft;
+    }
+    setIsActive(!isActive);
+  };
   
   const resetTimer = () => {
+    if (isActive && selectedHabitId) {
+       const spent = sessionStartRef.current - timeLeft;
+       deductTime(spent, selectedHabitId);
+    }
     setIsActive(false);
     setTimeLeft(initialTime);
+    sessionStartRef.current = initialTime;
+    pendingSecondsRef.current = 0;
   };
 
   const setDuration = (minutes: number) => {
+    // If timer was running, deduct time before switching duration
+    if (isActive && selectedHabitId) {
+      const spent = sessionStartRef.current - timeLeft;
+      deductTime(spent, selectedHabitId);
+    }
+    
     const seconds = minutes * 60;
     setInitialTime(seconds);
     setTimeLeft(seconds);
+    sessionStartRef.current = seconds;
     setIsActive(false);
+    pendingSecondsRef.current = 0;
   };
 
   const formatTime = (seconds: number) => {
@@ -114,6 +192,21 @@ export default function Pomodoro() {
     }
   }
 
+  const handleSelectHabit = (habitId: number) => {
+    // If timer is running, deduct from old habit before switching
+    if (isActive && selectedHabitId && selectedHabitId !== habitId) {
+      const spent = sessionStartRef.current - timeLeft;
+      deductTime(spent, selectedHabitId);
+      sessionStartRef.current = timeLeft; // Reset session start for new habit
+    }
+
+    if (selectedHabitId === habitId) {
+      setSelectedHabitId(null);
+    } else {
+      setSelectedHabitId(habitId);
+    }
+  };
+
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <h1 className="text-3xl font-black text-gray-800 dark:text-white mb-8">Pomodoro Odak</h1>
@@ -156,6 +249,11 @@ export default function Pomodoro() {
               <p className="text-gray-500 dark:text-white/50 mt-2 font-medium">
                 {isActive ? 'Odaklanma Zamanı' : 'Hazır mısın?'}
               </p>
+              {selectedHabitId && (
+                <p className="text-[var(--color-primary)] text-sm font-bold mt-2">
+                  {habits.find(h => h.id === selectedHabitId)?.title} için çalışılıyor
+                </p>
+              )}
             </div>
           </div>
 
@@ -179,8 +277,8 @@ export default function Pomodoro() {
           </div>
 
           {/* Presets */}
-          <div className="flex flex-wrap justify-center gap-3">
-            {[5, 10, 15, 20, 25].map((mins) => (
+          <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
+            {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((mins) => (
               <button
                 key={mins}
                 onClick={() => setDuration(mins)}
@@ -222,35 +320,56 @@ export default function Pomodoro() {
               <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
                 {todaysTasks.map((habit) => {
                   const isCompleted = completedHabitIds.has(habit.id);
+                  const isSelected = selectedHabitId === habit.id;
+                  const remaining = getRemainingTime(habit);
+                  const totalDuration = habit.duration_minutes || 0;
+                  const completed = Math.max(0, totalDuration - remaining);
+                  const progressPercent = totalDuration > 0 ? (completed / totalDuration) * 100 : 0;
                   
                   return (
                     <div
                       key={habit.id}
-                      className={`group flex items-center gap-3 p-4 rounded-2xl border transition-all ${
-                        isCompleted
-                          ? 'bg-gray-100/50 dark:bg-white/5 border-transparent opacity-60'
-                          : 'bg-white dark:bg-white/5 border-gray-200 dark:border-[#32675a] hover:border-[var(--color-primary)] shadow-sm'
+                      onClick={() => handleSelectHabit(habit.id)}
+                      className={`group flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 dark:bg-[var(--color-primary)]/10'
+                          : isCompleted
+                            ? 'bg-gray-100/50 dark:bg-white/5 border-transparent opacity-60'
+                            : 'bg-white dark:bg-white/5 border-gray-200 dark:border-[#32675a] hover:border-[var(--color-primary)]/50 shadow-sm'
                       }`}
                     >
                       <button
-                        onClick={() => toggleHabit(habit.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleHabit(habit.id);
+                        }}
                         className={`flex-shrink-0 transition-colors ${
                           isCompleted ? 'text-[var(--color-primary)]' : 'text-gray-300 dark:text-white/20 group-hover:text-[var(--color-primary)]'
                         }`}
                       >
                         {isCompleted ? (
-                          <CheckCircle2 size={24} weight="fill" />
+                          <CheckCircle2 size={24} className="fill-current" />
                         ) : (
                           <Circle size={24} />
                         )}
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className={`font-semibold truncate ${isCompleted ? 'line-through text-gray-500' : 'text-gray-800 dark:text-white'}`}>
-                            {habit.title}
-                          </span>
-                          <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                             {habit.icon && HABIT_ICON_MAP[habit.icon] && (
+                                <span className="text-gray-400 dark:text-white/40">
+                                  {(() => {
+                                    const IconComp = HABIT_ICON_MAP[habit.icon];
+                                    return <IconComp size={16} />;
+                                  })()}
+                                </span>
+                              )}
+                              <span className={`font-semibold truncate ${isCompleted ? 'line-through text-gray-500' : 'text-gray-800 dark:text-white'}`}>
+                                {habit.title}
+                              </span>
+                          </div>
+                          <span className={`text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
                             isCompleted 
                               ? 'bg-gray-200 dark:bg-white/10 text-gray-500' 
                               : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
@@ -259,19 +378,24 @@ export default function Pomodoro() {
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
-                          {habit.icon && HABIT_ICON_MAP[habit.icon] && (
-                            <span className="flex items-center gap-1">
-                              {(() => {
-                                const IconComp = HABIT_ICON_MAP[habit.icon];
-                                return <IconComp size={12} />;
-                              })()}
-                            </span>
-                          )}
-                          {habit.duration_minutes && (
-                            <span>• {habit.duration_minutes} dk</span>
-                          )}
-                        </div>
+                        {habit.duration_minutes !== null && (
+                          <div className="mt-3">
+                             <div className="flex items-center justify-between text-xs mb-1.5">
+                                <span className="text-gray-500 dark:text-white/50 font-medium">
+                                  {completed} dk yapıldı
+                                </span>
+                                <span className={isSelected ? 'font-bold text-[var(--color-primary)]' : 'text-gray-500 dark:text-white/50'}>
+                                  {remaining} dk kaldı
+                                </span>
+                             </div>
+                             <div className="h-1.5 w-full bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all duration-500 ${isCompleted ? 'bg-gray-400' : 'bg-[var(--color-primary)]'}`}
+                                  style={{ width: `${Math.min(100, progressPercent)}%` }}
+                                />
+                             </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

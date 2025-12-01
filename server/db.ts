@@ -50,6 +50,17 @@ db.exec(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  -- Alışkanlık günlük ilerleme (kalan süre)
+  CREATE TABLE IF NOT EXISTS habit_daily_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    habit_id INTEGER NOT NULL,
+    progress_date DATE NOT NULL,
+    remaining_minutes INTEGER NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE,
+    UNIQUE(habit_id, progress_date)
+  );
+
   -- Varsayılan ayarları ekle
   INSERT OR IGNORE INTO settings (key, value) VALUES ('username', 'Kullanıcı');
   INSERT OR IGNORE INTO settings (key, value) VALUES ('theme', 'dark');

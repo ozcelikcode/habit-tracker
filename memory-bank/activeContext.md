@@ -5,6 +5,20 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 
 ## Son Yapılan Değişiklikler
 
+### Notlar Sistemi Görsel ve UX İyileştirmeleri (Güncel)
+- **Birleşik Tema Sistemi**: `src/utils/noteThemes.ts` oluşturuldu. Tüm not sayfaları (`NewNote`, `Notes`, `ViewNote`) artık tek bir tema kaynağından besleniyor.
+- **Görsel İyileştirmeler**:
+  - Not kartları ve editör alanı için zarif, opak arka plan renkleri.
+  - Metin renkleri artık seçilen tema ile uyumlu (örn: Mavi tema -> Mavi metin).
+  - Dark/Light mod uyumu mükemmelleştirildi.
+- **Kategori Yönetimi**:
+  - `NewNote.tsx` içindeki kategori seçicisi büyütüldü.
+  - Kategori listesinde her öğe için "Düzenle" ve "Sil" seçenekleri eklendi.
+  - Kategori verilerinin kaybolma sorunu (race condition) lazy initialization ile çözüldü.
+- **UX İyileştirmeleri**:
+  - Not listesi (`Notes.tsx`) kartlarına hover durumunda "Düzenle" butonu eklendi.
+  - Editör alanı tema rengine göre dinamik olarak renkleniyor.
+
 ### Pomodoro Veri Bütünlüğü (Data Integrity) (Güncel)
 - **Sorun**: Sayfa yenilendiğinde, o ana kadar çalışılan süre (henüz veritabanına yazılmamışsa) kayboluyordu.
 - **Çözüm**: `PomodoroContext` güncellendi.

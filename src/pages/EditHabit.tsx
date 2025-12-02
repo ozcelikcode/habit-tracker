@@ -1,29 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Clock, Timer, X } from 'lucide-react';
-import { getHabit, updateHabit } from '../api';
-import { HABIT_COLORS, FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
-import { HABIT_ICONS, type HabitIconId } from '../icons/habitIcons';
-import TimePicker from '../components/TimePicker';
-import DurationPicker from '../components/DurationPicker';
+import { useParams } from 'react-router-dom';
+import { getHabit } from '../api';
+import HabitForm from '../components/HabitForm';
 
 export default function EditHabit() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const [habit, setHabit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [color, setColor] = useState(HABIT_COLORS[0].value);
-  const [icon, setIcon] = useState<HabitIconId | null>(null);
-  const [frequency, setFrequency] = useState<'daily' | 'weekdays' | 'custom'>('daily');
-  const [customDays, setCustomDays] = useState<number[]>([]);
-  const [scheduledTime, setScheduledTime] = useState<string | null>(null);
-  const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showDurationPicker, setShowDurationPicker] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -33,22 +17,8 @@ export default function EditHabit() {
 
   async function loadHabit(habitId: number) {
     try {
-      const habit = await getHabit(habitId);
-      setTitle(habit.title);
-      setSubtitle(habit.subtitle || '');
-      setColor(habit.color);
-      setFrequency(habit.frequency);
-      if (habit.custom_days) {
-        setCustomDays(JSON.parse(habit.custom_days));
-      }
-      setScheduledTime(habit.scheduled_time || null);
-      setDurationMinutes(habit.duration_minutes || null);
-      if (habit.icon) {
-        const found = HABIT_ICONS.find((opt) => opt.id === habit.icon);
-        setIcon(found ? found.id : null);
-      } else {
-        setIcon(null);
-      }
+      const data = await getHabit(habitId);
+      setHabit(data);
     } catch (err) {
       setError('Alışkanlık bulunamadı');
     } finally {
@@ -56,49 +26,18 @@ export default function EditHabit() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-
-    if (!title.trim()) {
-      setError('Başlık gerekli');
-      return;
-    }
-
-    if (frequency === 'custom' && customDays.length === 0) {
-      setError('En az bir gün seçmelisiniz');
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      await updateHabit(parseInt(id!), {
-        title: title.trim(),
-        subtitle: subtitle.trim() || undefined,
-        color,
-        icon: icon || undefined,
-        frequency,
-        custom_days: frequency === 'custom' ? JSON.stringify(customDays) : undefined,
-        scheduled_time: scheduledTime || undefined,
-        duration_minutes: durationMinutes || undefined,
-      });
-      navigate('/habits');
-    } catch (err) {
-      setError('Alışkanlık güncellenirken bir hata oluştu');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function toggleDay(day: number) {
-    setCustomDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500 dark:text-white/50">Yükleniyor...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{error}</div>
       </div>
     );
   }
@@ -110,228 +49,7 @@ export default function EditHabit() {
         <p className="text-gray-600 dark:text-white/60 mt-2">Alışkanlık bilgilerini güncelleyin.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Başlık */}
-        <div>
-          <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Başlık *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Örn: Sabah 5'te uyan"
-            className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-        </div>
-
-        {/* Alt Başlık */}
-        <div>
-          <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Alt Başlık (Opsiyonel)</label>
-          <input
-            type="text"
-            value={subtitle}
-            onChange={(e) => setSubtitle(e.target.value)}
-            placeholder="Örn: Daha üretken bir gün için"
-            className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-        </div>
-
-        {/* Renk Seçimi */}
-        <div>
-          <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Renk</label>
-          <div className="flex gap-3 flex-wrap">
-            {HABIT_COLORS.map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setColor(c.value)}
-                className={`size-10 rounded-full transition-all ${
-                  color === c.value ? 'ring-2 ring-gray-800 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-background-dark scale-110' : 'hover:scale-105'
-                }`}
-                style={{ backgroundColor: c.value }}
-                title={c.name}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* İkon Seçimi */}
-        <div>
-          <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">İkon (Opsiyonel)</label>
-          <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
-            Alışkanlığınızı en iyi temsil eden bir ikon seçin.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {HABIT_ICONS.map((opt) => {
-              const SelectedIcon = opt.Icon;
-              const isSelected = icon === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setIcon(isSelected ? null : opt.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs sm:text-sm transition-all min-w-[120px] justify-start ${
-                    isSelected
-                      ? 'bg-primary text-white dark:text-background-dark border-primary shadow-sm'
-                      : 'bg-gray-100 dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-700 dark:text-white/70 hover:border-primary/60'
-                  }`}
-                >
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/80 dark:bg-black/40">
-                    <SelectedIcon size={16} />
-                  </span>
-                  <span className="line-clamp-1 text-left">{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Tekrar Sıklığı */}
-        <div>
-          <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Tekrar Sıklığı</label>
-          <div className="flex gap-3 flex-wrap">
-            {FREQUENCY_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setFrequency(opt.value as typeof frequency)}
-                className={`px-4 py-2 rounded-lg border transition-colors ${
-                  frequency === opt.value
-                    ? 'bg-primary text-white dark:text-background-dark border-primary font-medium'
-                    : 'bg-gray-100 dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Özel Günler */}
-        {frequency === 'custom' && (
-          <div>
-            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">Günleri Seçin</label>
-            <div className="flex gap-2 flex-wrap">
-              {WEEKDAYS.map((day) => (
-                <button
-                  key={day.value}
-                  type="button"
-                  onClick={() => toggleDay(day.value)}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
-                    customDays.includes(day.value)
-                      ? 'bg-primary text-white dark:text-background-dark border-primary font-medium'
-                      : 'bg-gray-100 dark:bg-white/5 border-gray-300 dark:border-[#32675a] text-gray-600 dark:text-white/70 hover:border-primary/50'
-                  }`}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Saat ve Süre */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Planlanan Saat */}
-          <div>
-            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
-              <span className="flex items-center gap-2">
-                <Clock size={18} />
-                Planlanan Saat (Opsiyonel)
-              </span>
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowTimePicker(true)}
-              className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-left flex items-center justify-between hover:border-primary/50 transition-colors"
-            >
-              <span className={scheduledTime ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-white/30'}>
-                {scheduledTime ? scheduledTime : 'Saat seçin'}
-              </span>
-              {scheduledTime && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setScheduledTime(null); }}
-                  className="text-gray-400 hover:text-red-500"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </button>
-          </div>
-
-          {/* Süre */}
-          <div>
-            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
-              <span className="flex items-center gap-2">
-                <Timer size={18} />
-                Süre (Opsiyonel)
-              </span>
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowDurationPicker(true)}
-              className="w-full px-4 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-left flex items-center justify-between hover:border-primary/50 transition-colors"
-            >
-              <span className={durationMinutes ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-white/30'}>
-                {durationMinutes 
-                  ? `${Math.floor(durationMinutes / 60) > 0 ? Math.floor(durationMinutes / 60) + ' sa ' : ''}${durationMinutes % 60 > 0 ? (durationMinutes % 60) + ' dk' : ''}`
-                  : 'Süre seçin'}
-              </span>
-              {durationMinutes && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setDurationMinutes(null); }}
-                  className="text-gray-400 hover:text-red-500"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Hata Mesajı */}
-        {error && (
-          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">{error}</div>
-        )}
-
-        {/* Butonlar */}
-        <div className="flex gap-4 pt-4">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex-1 px-6 py-3 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-[#32675a] rounded-lg text-gray-600 dark:text-white/70 font-medium hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-          >
-            İptal
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 px-6 py-3 bg-primary text-white dark:text-background-dark rounded-lg font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {saving ? 'Kaydediliyor...' : 'Kaydet'}
-          </button>
-        </div>
-      </form>
-
-      {/* Time Picker Modal */}
-      {showTimePicker && (
-        <TimePicker
-          value={scheduledTime || '09:00'}
-          onChange={setScheduledTime}
-          onClose={() => setShowTimePicker(false)}
-          title="Planlanan Saat"
-        />
-      )}
-
-      {/* Duration Picker Modal */}
-      {showDurationPicker && (
-        <DurationPicker
-          value={durationMinutes || 30}
-          onChange={setDurationMinutes}
-          onClose={() => setShowDurationPicker(false)}
-        />
-      )}
+      {habit && <HabitForm initialData={habit} />}
     </div>
   );
 }

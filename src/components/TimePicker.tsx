@@ -83,20 +83,22 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
 
   // Mouse/Touch event handlers
   const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault(); // Prevent default touch actions like scrolling
     setIsDragging(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    clockRef.current?.setPointerCapture(e.pointerId);
     getValueFromAngle(e.clientX, e.clientY);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
+    e.preventDefault();
     getValueFromAngle(e.clientX, e.clientY);
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (isDragging) {
       setIsDragging(false);
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      clockRef.current?.releasePointerCapture(e.pointerId);
       // Saat seçildikten sonra dakikaya geç
       if (selectingHours) {
         setTimeout(() => setSelectingHours(false), 200);
@@ -105,6 +107,8 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
   };
 
   const handleClockClick = (num: number) => {
+    // Dragging bittikten hemen sonra click tetiklenirse engellemek isteyebiliriz
+    // ama şimdilik kullanıcı deneyimi açısından tıklama da çalışmalı
     if (selectingHours) {
       setHours(num);
       setTimeout(() => setSelectingHours(false), 200);
@@ -162,7 +166,6 @@ export default function TimePicker({ value, onChange, onClose, title = 'Saat Se�
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
         >
           {/* Clock background */}
           <div className="absolute inset-0 rounded-full bg-gray-100 dark:bg-gray-700 cursor-pointer" />

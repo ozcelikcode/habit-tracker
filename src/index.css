@@ -50,6 +50,10 @@ input[type="checkbox"]:focus {
   background-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
 }
 
+.bg-primary\/5 {
+  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent) !important;
+}
+
 .bg-primary\/20 {
   background-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
 }

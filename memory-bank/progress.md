@@ -63,6 +63,9 @@
 - [x] Not silme özelliği
 - [x] İçerik çıkarımı düzeltildi (HTML temizleme)
 - [x] LocalStorage depolama
+- [x] **Görsel Revizyon**: Birleşik tema sistemi, zarif renkler, dark/light uyumu.
+- [x] **Kategori Yönetimi**: Kategori ekleme/silme/düzenleme, veri kalıcılığı düzeltmesi.
+- [x] **UX**: Liste görünümünde düzenleme butonu, dinamik metin renkleri.
 
 ### Pomodoro Sistemi (1 Aralık 2025)
 - [x] Pomodoro sayfası (`Pomodoro.tsx`)
@@ -84,7 +87,6 @@
 - IDE'de `@tailwind` direktifi uyarısı (çalışmayı etkilemiyor)
 
 ## 📋 Gelecek Özellikler (Backlog)
-- [ ] Not düzenleme özelliği
 - [ ] Not arama/filtreleme
 - [ ] Haftalık görünüm
 - [ ] Aylık görünüm

@@ -3,10 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, CalendarClock, GripVertical, Tag, StickyNote, Trash2 } from 'lucide-react';
+import { Plus, CalendarClock, GripVertical, Tag, StickyNote, Trash2, Edit2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
-
-type NoteTheme = 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'slate';
+import { NOTE_THEMES, type NoteTheme } from '../utils/noteThemes';
 
 interface NoteItem {
   id: string;
@@ -20,19 +19,8 @@ interface NoteItem {
   sentenceCount: number;
 }
 
-// Zarif, koyu tonlu tema renkleri - tüm kart boyancak
-const THEME_STYLES: Record<NoteTheme, { className: string; isDynamic?: boolean }> = {
-  default: { className: 'text-gray-800 dark:text-white', isDynamic: true },
-  emerald: { className: 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/40 text-emerald-900 dark:text-white' },
-  blue: { className: 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/40 text-sky-900 dark:text-white' },
-  amber: { className: 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-white' },
-  rose: { className: 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/40 text-rose-900 dark:text-white' },
-  slate: { className: 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/40 text-slate-900 dark:text-white' },
-};
-
-function NoteCard({ note, onDelete, onNavigate, isOverlay = false, dragProps }: { note: NoteItem; onDelete?: (id: string) => void; onNavigate?: (id: string) => void; isOverlay?: boolean; dragProps?: any }) {
-  const themeConfig = THEME_STYLES[note.theme] || THEME_STYLES.default;
-  const isDynamicTheme = themeConfig.isDynamic;
+function NoteCard({ note, onDelete, onEdit, onNavigate, isOverlay = false, dragProps }: { note: NoteItem; onDelete?: (id: string) => void; onEdit?: (id: string) => void; onNavigate?: (id: string) => void; isOverlay?: boolean; dragProps?: any }) {
+  const themeConfig = NOTE_THEMES[note.theme] || NOTE_THEMES.default;
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (isOverlay || !onNavigate) return;
@@ -47,27 +35,39 @@ function NoteCard({ note, onDelete, onNavigate, isOverlay = false, dragProps }: 
     <div
       onClick={handleCardClick}
       className={`rounded-2xl border p-4 shadow-sm transition-all cursor-pointer group 
-        ${isDynamicTheme ? 'bg-white dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] border-border-light dark:border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)]' : themeConfig.className}
-        ${themeConfig.className}
+        ${themeConfig.colors.bg} ${themeConfig.colors.border}
         ${isOverlay ? 'shadow-xl scale-105 cursor-grabbing' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {note.category && (
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${isDynamicTheme ? 'bg-primary/10 text-primary dark:bg-white/10 dark:text-white/80' : 'bg-black/5 dark:bg-white/10'}`}>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold bg-black/5 dark:bg-white/10 ${themeConfig.colors.text}`}>
               <Tag size={14} />
               {note.category}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1" data-no-navigate>
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(note.id);
+              }}
+              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-500/10 hover:text-blue-500 text-gray-500 dark:text-white/50"
+              title="Düzenle"
+              data-no-navigate
+            >
+              <Edit2 size={16} />
+            </button>
+          )}
           {onDelete && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(note.id);
               }}
-              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/10 hover:text-red-500"
+              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/10 hover:text-red-500 text-gray-500 dark:text-white/50"
               title="Sil"
               data-no-navigate
             >
@@ -75,7 +75,7 @@ function NoteCard({ note, onDelete, onNavigate, isOverlay = false, dragProps }: 
             </button>
           )}
           <button
-            className={`p-1.5 rounded-lg ${isOverlay ? 'cursor-grabbing' : 'cursor-grab'} hover:bg-black/5 dark:hover:bg-white/10`}
+            className={`p-1.5 rounded-lg ${isOverlay ? 'cursor-grabbing' : 'cursor-grab'} hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 dark:text-white/50`}
             {...dragProps}
             data-no-navigate
           >
@@ -84,12 +84,12 @@ function NoteCard({ note, onDelete, onNavigate, isOverlay = false, dragProps }: 
         </div>
       </div>
 
-      <h3 className="mt-3 text-lg font-semibold line-clamp-2">{note.title || 'Başlıksız'}</h3>
-      <p className="mt-2 text-sm opacity-70 line-clamp-3">
+      <h3 className={`mt-3 text-lg font-semibold line-clamp-2 ${themeConfig.colors.text}`}>{note.title || 'Başlıksız'}</h3>
+      <p className={`mt-2 text-sm line-clamp-3 ${themeConfig.colors.textMuted}`}>
         {note.plainText || 'İçerik yok'}
       </p>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs opacity-50">
+      <div className={`mt-3 flex flex-wrap items-center gap-2 text-xs opacity-70 ${themeConfig.colors.textMuted}`}>
         <span className="inline-flex items-center gap-1">
           <CalendarClock size={14} />
           {note.createdAt}
@@ -103,7 +103,7 @@ function NoteCard({ note, onDelete, onNavigate, isOverlay = false, dragProps }: 
   );
 }
 
-function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDelete: (id: string) => void; onNavigate: (id: string) => void }) {
+function SortableNoteCard({ note, onDelete, onEdit, onNavigate }: { note: NoteItem; onDelete: (id: string) => void; onEdit: (id: string) => void; onNavigate: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
   
   const style: React.CSSProperties = {
@@ -117,6 +117,7 @@ function SortableNoteCard({ note, onDelete, onNavigate }: { note: NoteItem; onDe
       <NoteCard 
         note={note} 
         onDelete={onDelete} 
+        onEdit={onEdit}
         onNavigate={onNavigate} 
         dragProps={{ ...attributes, ...listeners }}
       />
@@ -194,6 +195,10 @@ export default function Notes() {
     navigate(`/notes/${id}`);
   };
 
+  const handleEditNote = (id: string) => {
+    navigate(`/notes/${id}/edit`);
+  };
+
   const activeNote = activeId ? notes.find(n => n.id === activeId) : null;
 
   return (
@@ -253,6 +258,7 @@ export default function Notes() {
                   key={note.id} 
                   note={note} 
                   onDelete={handleDeleteNote}
+                  onEdit={handleEditNote}
                   onNavigate={handleNavigateToNote}
                 />
               ))}

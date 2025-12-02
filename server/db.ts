@@ -20,6 +20,7 @@ db.exec(`
     custom_days TEXT, -- JSON array for custom days [0,1,2,3,4,5,6] (0=Pazar)
     scheduled_time TEXT, -- HH:MM format - ne zaman çalışacak
     duration_minutes INTEGER, -- kaç dakika sürecek
+    start_date DATE, -- YYYY-MM-DD format - ne zaman başlayacak
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     archived INTEGER DEFAULT 0
@@ -79,6 +80,11 @@ try {
 }
 try {
   db.exec(`ALTER TABLE habits ADD COLUMN icon TEXT`);
+} catch (e) {
+  // Sütun zaten var
+}
+try {
+  db.exec(`ALTER TABLE habits ADD COLUMN start_date DATE`);
 } catch (e) {
   // Sütun zaten var
 }

@@ -26,10 +26,14 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
 
-    // Veriyi map'e çevir
+    // Veriyi map'e çevir ve maksimum tamamlanma sayısını bul
     const dataMap = new Map<string, { completed: number; total: number }>();
+    let maxCompleted = 0;
     data.forEach((d) => {
       dataMap.set(d.completed_date, { completed: d.completed_count, total: d.total_count || totalHabits });
+      if (d.completed_count > maxCompleted) {
+        maxCompleted = d.completed_count;
+      }
     });
 
     // Her gün için hücre oluştur
@@ -40,18 +44,17 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
       const count = dayData.completed;
       const total = dayData.total;
 
-      // Seviye hesapla (0-10) - Sabit ölçek
+      // Seviye hesapla (0-10) - Mutlak sayıya göre (GitHub tarzı)
+      // En yüksek tamamlanma sayısına göre normalize et
       let level = 0;
       if (count > 0) {
-        // 1-10 arası ölçeklendirme
-        // Eğer total 0 ise (imkansız ama) 0 al
-        if (total > 0) {
-          const ratio = count / total;
-          // 10 seviyeli ölçek: 0.1 -> 1, 1.0 -> 10
+        if (maxCompleted > 0) {
+          // Logaritmik ölçeklendirme yerine lineer ölçeklendirme kullanıyoruz
+          // çünkü kullanıcı "6 görev"in "3 görev"den daha koyu olmasını bekliyor
+          const ratio = count / maxCompleted;
           level = Math.ceil(ratio * 10);
         } else {
-          // Total yoksa eski mantık (max 4 gibi düşünelim ama burada 10'a map edelim)
-          level = Math.min(10, count); 
+          level = 1;
         }
       }
 
@@ -65,7 +68,9 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
   // Haftanın ilk gününe göre boş hücreler ekle
   const firstDayOffset = useMemo(() => {
     const firstDay = new Date(year, 0, 1).getDay();
-    return firstDay;
+    // Pazar (0) ise 6 (Pazar en son), diğerleri day-1 (Pzt=0)
+    // Türk takvimi Pzt başlar
+    return firstDay === 0 ? 6 : firstDay - 1;
   }, [year]);
 
   const [hoveredCell, setHoveredCell] = useState<{ date: string; count: number; total: number; x: number; y: number } | null>(null);
@@ -74,8 +79,8 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
   // 1-10 arası opacity ile
   const getLevelStyle = (level: number) => {
     if (level === 0) return {}; // Boş
-    // Opacity 0.1'den 1.0'a kadar
-    const opacity = Math.min(1, Math.max(0.1, level / 10));
+    // Opacity 0.2'den 1.0'a kadar (daha belirgin olması için alt sınırı artırdım)
+    const opacity = 0.2 + (level / 10) * 0.8;
     return {
       backgroundColor: `color-mix(in srgb, var(--color-primary) ${opacity * 100}%, transparent)`,
       borderColor: `color-mix(in srgb, var(--color-primary) ${Math.min(1, opacity + 0.2) * 100}%, transparent)`
@@ -156,7 +161,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
                 <div
                   key={`${weekIndex}-${dayIndex}`}
                   className={`aspect-square rounded-[2px] sm:rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover:ring-gray-400 dark:hover:ring-white/50 relative ${
-                    cell.level === -1 ? 'bg-transparent cursor-default' : cell.level === 0 ? 'bg-gray-300 dark:bg-white/10' : ''
+                    cell.level === -1 ? 'bg-transparent cursor-default' : cell.level === 0 ? 'bg-gray-200 dark:bg-white/5' : ''
                   }`}
                   style={cell.level > 0 ? getLevelStyle(cell.level) : undefined}
                   onMouseEnter={(e) => {
@@ -200,7 +205,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
       <div className="flex justify-between sm:justify-end items-center gap-2 mt-4 text-[10px] sm:text-xs text-gray-600 dark:text-white/50">
         <span>Az</span>
         <div className="flex items-center gap-1 sm:gap-2">
-          <div className="size-2.5 sm:size-3 rounded-sm bg-gray-300 dark:bg-white/10" />
+          <div className="size-2.5 sm:size-3 rounded-sm bg-gray-200 dark:bg-white/5" />
           {[2, 4, 6, 8, 10].map(level => (
              <div key={level} className="size-2.5 sm:size-3 rounded-sm" style={getLevelStyle(level)} />
           ))}
@@ -219,7 +224,7 @@ export default function ContributionCalendar({ data, totalHabits, year, noteDate
         >
           <div className="font-medium">{new Date(hoveredCell.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <div className="text-gray-300">
-            {hoveredCell.count}/{hoveredCell.total} görev tamamlandı
+            {hoveredCell.count} görev tamamlandı
           </div>
           {noteDatesSet.has(hoveredCell.date) && (
             <div className="flex items-center gap-1 text-amber-400 mt-1">

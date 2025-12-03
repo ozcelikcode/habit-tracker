@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Moon, Sun, Check, Bell, BellRing } from 'lucide-react';
+import { Moon, Sun, Check, Bell, BellRing, Globe } from 'lucide-react';
 import { getSettings, updateSetting } from '../api';
 import type { Settings as SettingsType } from '../types';
+import { TIMEZONE_OPTIONS } from '../types';
 import { ensureServiceWorker, getNotificationStatus, requestNotificationPermission } from '../utils/notificationService';
 
 export default function Settings() {
-  const [settings, setSettings] = useState<SettingsType>({ username: '', theme: 'dark' });
+  const [settings, setSettings] = useState<SettingsType>({ username: '', theme: 'dark', timezone: 'Etc/GMT-3' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -31,7 +32,7 @@ export default function Settings() {
   async function loadSettings() {
     try {
       const data = await getSettings();
-      setSettings(data);
+      setSettings({ ...data, timezone: data.timezone || 'Etc/GMT-3' });
     } catch (error) {
       console.error('Ayarlar yüklenirken hata:', error);
     } finally {
@@ -61,12 +62,16 @@ export default function Settings() {
         updateSetting('username', settings.username),
         updateSetting('theme', settings.theme),
         updateSetting('accentColor', settings.accentColor || '#2EAC8A'),
+        updateSetting('timezone', settings.timezone || 'Etc/GMT-3'),
       ]);
       // Tema değişikliğini tetikle
       document.documentElement.classList.toggle('dark', settings.theme === 'dark');
       // Accent rengi CSS değişkeni olarak ayarla
       document.documentElement.style.setProperty('--color-primary', settings.accentColor || '#2EAC8A');
       window.dispatchEvent(new Event('themeChange'));
+      // Timezone değişikliğini tetikle (sayfa yenileme gerekebilir veya context kullanılabilir)
+      window.dispatchEvent(new CustomEvent('timezoneChange', { detail: { timezone: settings.timezone } }));
+      
       setMessage('Ayarlar kaydedildi!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -104,6 +109,38 @@ export default function Settings() {
               placeholder="Adınızı girin"
               className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
+          </div>
+        </div>
+
+        {/* Bölge ve Saat */}
+        <div className="p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
+          <h3 className="text-gray-800 dark:text-white text-lg font-semibold mb-4">Bölge ve Saat</h3>
+          <div>
+            <label className="block text-gray-700 dark:text-white/80 text-sm font-medium mb-2">
+              <span className="flex items-center gap-2">
+                <Globe size={16} />
+                Saat Dilimi
+              </span>
+            </label>
+            <div className="relative">
+              <select
+                value={settings.timezone}
+                onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                {TIMEZONE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-white dark:bg-gray-900">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+            <p className="text-gray-500 dark:text-white/40 text-xs mt-2">
+              Tüm tarih ve saat gösterimleri bu saat dilimine göre ayarlanacaktır.
+            </p>
           </div>
         </div>
 

@@ -53,6 +53,13 @@
 - [x] Hover efektleri
 - [x] Geçiş animasyonları
 
+### UI/UX İyileştirmeleri (Güncel)
+- [x] **Habits Sayfası**: Animasyonlar azaltıldı, tarih başlığı eklendi.
+- [x] **Home Sayfası**: Tarih başlığı eklendi.
+- [x] **Pomodoro Sayfası**: Tasarım yenilendi (dijital saat), özel süre girişi eklendi, tarih başlığı eklendi.
+- [x] **Takvim Mantığı**: Renk skalası göreceli hale getirildi.
+- [x] **Ayarlar**: Zaman dilimi seçimi eklendi.
+
 ### Notlar Sistemi (30 Kasım 2025 - Güncel)
 - [x] Notlar sayfası ayrı listeleme (`Notes.tsx`)
 - [x] Not ekleme ayrı sayfa (`NewNote.tsx`)

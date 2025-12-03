@@ -35,8 +35,38 @@ export interface Settings {
   username: string;
   theme: 'dark' | 'light';
   accentColor?: string;
+  timezone?: string; // e.g., "Europe/Istanbul"
   [key: string]: string | undefined;
 }
+
+// Saat dilimi seçenekleri
+export const TIMEZONE_OPTIONS = [
+  { value: 'Etc/GMT+12', label: 'GMT-12 (Baker Adası)' },
+  { value: 'Etc/GMT+11', label: 'GMT-11 (Amerikan Samoası)' },
+  { value: 'Etc/GMT+10', label: 'GMT-10 (Hawaii)' },
+  { value: 'Etc/GMT+9', label: 'GMT-9 (Alaska)' },
+  { value: 'Etc/GMT+8', label: 'GMT-8 (Los Angeles, Vancouver)' },
+  { value: 'Etc/GMT+7', label: 'GMT-7 (Denver, Edmonton)' },
+  { value: 'Etc/GMT+6', label: 'GMT-6 (Mexico City, Chicago)' },
+  { value: 'Etc/GMT+5', label: 'GMT-5 (New York, Toronto)' },
+  { value: 'Etc/GMT+4', label: 'GMT-4 (Santiago, Santo Domingo)' },
+  { value: 'Etc/GMT+3', label: 'GMT-3 (Buenos Aires, Sao Paulo)' },
+  { value: 'Etc/GMT+2', label: 'GMT-2 (Güney Georgia)' },
+  { value: 'Etc/GMT+1', label: 'GMT-1 (Azorlar)' },
+  { value: 'Etc/GMT', label: 'GMT+0 (Londra, Dublin, Lizbon)' },
+  { value: 'Etc/GMT-1', label: 'GMT+1 (Berlin, Roma, Paris)' },
+  { value: 'Etc/GMT-2', label: 'GMT+2 (Kahire, Atina, İstanbul)' }, // Turkey is GMT+3 now but historically +2. Actually Turkey is GMT+3 fixed (Etc/GMT-3).
+  { value: 'Etc/GMT-3', label: 'GMT+3 (İstanbul, Moskova, Riyad)' },
+  { value: 'Etc/GMT-4', label: 'GMT+4 (Dubai, Bakü)' },
+  { value: 'Etc/GMT-5', label: 'GMT+5 (Karaçi, Taşkent)' },
+  { value: 'Etc/GMT-6', label: 'GMT+6 (Dakka, Almatı)' },
+  { value: 'Etc/GMT-7', label: 'GMT+7 (Bangkok, Cakarta)' },
+  { value: 'Etc/GMT-8', label: 'GMT+8 (Pekin, Singapur)' },
+  { value: 'Etc/GMT-9', label: 'GMT+9 (Tokyo, Seul)' },
+  { value: 'Etc/GMT-10', label: 'GMT+10 (Sidney, Melbourne)' },
+  { value: 'Etc/GMT-11', label: 'GMT+11 (Solomon Adaları)' },
+  { value: 'Etc/GMT-12', label: 'GMT+12 (Wellington, Auckland)' },
+];
 
 export interface DailyNote {
   id?: number;

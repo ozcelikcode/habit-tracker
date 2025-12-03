@@ -1,11 +1,22 @@
 # HabitTracker - Aktif Bağlam
 
 ## Mevcut Çalışma Durumu
-Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde dinamik renk sistemi uygulandı.
+Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde dinamik renk sistemi uygulandı. Kullanıcı geri bildirimlerine dayalı UI/UX iyileştirmeleri yapıldı.
 
 ## Son Yapılan Değişiklikler
 
-### Notlar Sistemi Görsel ve UX İyileştirmeleri (Güncel)
+### UI/UX İyileştirmeleri (Güncel)
+- **Habits Sayfası**:
+  - Animasyonlar azaltıldı: `hover:-translate-y-1` ve `hover:scale-105` efektleri kaldırıldı, daha sade bir görünüm sağlandı.
+  - Tarih başlığı eklendi: Sayfanın üst kısmına güncel tarih (Türkçe formatında) eklendi.
+- **Home Sayfası**:
+  - Tarih başlığı eklendi: "Merhaba, [Kullanıcı]" başlığının altına güncel tarih eklendi.
+- **Pomodoro Sayfası**:
+  - **Tasarım Yenilemesi**: SVG dairesel zamanlayıcı kaldırıldı, yerine büyük ve temiz bir dijital saat tasarımı getirildi.
+  - **Özel Süre Girişi**: Zamanlayıcı metnine tıklandığında açılan input alanı ile kullanıcıların dakika cinsinden özel süre girmesi sağlandı.
+  - Tarih başlığı eklendi.
+
+### Notlar Sistemi Görsel ve UX İyileştirmeleri
 - **Birleşik Tema Sistemi**: `src/utils/noteThemes.ts` oluşturuldu. Tüm not sayfaları (`NewNote`, `Notes`, `ViewNote`) artık tek bir tema kaynağından besleniyor.
 - **Görsel İyileştirmeler**:
   - Not kartları ve editör alanı için zarif, opak arka plan renkleri.
@@ -19,7 +30,7 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
   - Not listesi (`Notes.tsx`) kartlarına hover durumunda "Düzenle" butonu eklendi.
   - Editör alanı tema rengine göre dinamik olarak renkleniyor.
 
-### Pomodoro Veri Bütünlüğü (Data Integrity) (Güncel)
+### Pomodoro Veri Bütünlüğü (Data Integrity)
 - **Sorun**: Sayfa yenilendiğinde, o ana kadar çalışılan süre (henüz veritabanına yazılmamışsa) kayboluyordu.
 - **Çözüm**: `PomodoroContext` güncellendi.
   - `sessionStart` ve `pendingSeconds` localStorage'a kaydediliyor.

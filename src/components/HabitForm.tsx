@@ -39,7 +39,10 @@ export default function HabitForm({ initialData }: HabitFormProps) {
   );
   const [scheduledTime, setScheduledTime] = useState<string | null>(initialData?.scheduled_time || null);
   const [durationMinutes, setDurationMinutes] = useState<number | null>(initialData?.duration_minutes || null);
-  const [startDate, setStartDate] = useState<string | null>(initialData?.start_date || null);
+  // Yeni alışkanlık eklerken varsayılan olarak bugünün tarihini seç
+  const [startDate, setStartDate] = useState<string | null>(
+    initialData?.start_date || new Date().toISOString().split('T')[0]
+  );
   
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showDurationPicker, setShowDurationPicker] = useState(false);

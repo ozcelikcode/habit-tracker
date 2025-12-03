@@ -17,7 +17,7 @@ export default function Home() {
   const [stats, setStats] = useState<Stats>({ totalCompleted: 0, currentStreak: 0, longestStreak: 0 });
   const [calendarData, setCalendarData] = useState<{ completed_date: string; completed_count: number; total_count?: number }[]>([]);
   const [totalHabits, setTotalHabits] = useState(0);
-  const [settings, setSettings] = useState<Settings>({ username: 'Kullanıcı', theme: 'dark' });
+  const [settings, setSettings] = useState<Settings>({ username: 'Kullanıcı', theme: 'dark', timezone: 'Etc/GMT-3' });
   const [loading, setLoading] = useState(true);
   const [dailyNote, setDailyNote] = useState<DailyNote>({ note_date: '', content: '' });
   const [noteSaving, setNoteSaving] = useState(false);
@@ -59,6 +59,7 @@ export default function Home() {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+      timeZone: settings.timezone || undefined,
     });
   };
 
@@ -305,6 +306,9 @@ export default function Home() {
     }
   }
 
+  const currentDate = new Date();
+  const dateStr = currentDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -318,12 +322,14 @@ export default function Home() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 p-4 sm:p-6">
         <div className="flex min-w-72 flex-col gap-2">
-          <p className="text-gray-800 dark:text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.033em]">
+          <h1 className="text-gray-800 dark:text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.033em]">
             Merhaba, {settings.username}!
-          </p>
-          <p className="text-[var(--color-primary)] dark:text-[color-mix(in_srgb,var(--color-primary)_70%,white)] text-base font-normal leading-normal">
-            Alışkanlık takviminize hoş geldiniz.
-          </p>
+          </h1>
+          <div className="flex items-center gap-2 text-[var(--color-primary)] dark:text-[color-mix(in_srgb,var(--color-primary)_70%,white)] text-base font-normal leading-normal">
+            <span className="font-medium">{dateStr}</span>
+            <span className="size-1 rounded-full bg-current opacity-50"></span>
+            <span>Alışkanlık takviminize hoş geldiniz.</span>
+          </div>
         </div>
         <Link
           to="/habits/new"

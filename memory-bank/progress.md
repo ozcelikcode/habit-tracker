@@ -59,6 +59,8 @@
 - [x] **Pomodoro Sayfası**: Tasarım yenilendi (dijital saat), özel süre girişi eklendi, tarih başlığı eklendi.
 - [x] **Takvim Mantığı**: Renk skalası göreceli hale getirildi.
 - [x] **Ayarlar**: Zaman dilimi seçimi eklendi.
+- [x] **Seçili Gün Detay Görünümü**: Dikey timeline (stepper) görünümü eklendi.
+- [x] **Hata Düzeltmesi**: Yeni eklenen alışkanlıkların görünürlük sorunu (`start_date` kontrolü) giderildi.
 
 ### Notlar Sistemi (30 Kasım 2025 - Güncel)
 - [x] Notlar sayfası ayrı listeleme (`Notes.tsx`)

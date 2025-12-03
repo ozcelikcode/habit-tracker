@@ -8,6 +8,7 @@ export interface Habit {
   custom_days: string | null; // JSON string of number array
   scheduled_time: string | null; // "HH:MM" format - ne zaman çalışacak
   duration_minutes: number | null; // kaç dakika sürecek
+  start_date: string | null; // YYYY-MM-DD format - ne zaman başlayacak
   created_at: string;
   updated_at: string;
   archived: number;

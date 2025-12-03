@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Repeat, Clock, Timer, StickyNote, Save, Loader2, X, Bell, BellRing } from 'lucide-react';
+import { Plus, Repeat, Clock, Timer, StickyNote, Save, Loader2, X, Bell, BellRing, CheckCircle2 } from 'lucide-react';
 import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates, getNoteByDate, getHabitProgress } from '../api';
 import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
 import { FREQUENCY_OPTIONS } from '../types';
@@ -9,7 +9,16 @@ import { HABIT_ICON_MAP } from '../icons/habitIcons';
 import { ensureServiceWorker, getNotificationStatus, requestNotificationPermission, showHabitNotification } from '../utils/notificationService';
 
 export default function Home() {
-  const today = new Date().toISOString().split('T')[0];
+  // Yerel saat dilimine göre bugünün tarihini al (YYYY-MM-DD)
+  const getLocalDate = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const today = getLocalDate();
   const currentYear = new Date().getFullYear();
 
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -32,6 +41,7 @@ export default function Home() {
     noteContent: string;
     loading: boolean;
   } | null>(null);
+  const [selectedDayCompletions, setSelectedDayCompletions] = useState<Completion[]>([]);
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission | 'unsupported'>('default');
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [notifiedHabits, setNotifiedHabits] = useState<{ date: string; ids: number[] }>(() => {
@@ -59,6 +69,16 @@ export default function Home() {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+      timeZone: settings.timezone || undefined,
+    });
+  };
+
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('tr-TR', {
+      hour: '2-digit',
+      minute: '2-digit',
       timeZone: settings.timezone || undefined,
     });
   };
@@ -150,15 +170,29 @@ export default function Home() {
   }
 
   // Alışkanlığın bugün gösterilip gösterilmeyeceğini belirle
-  const shouldShowHabit = (habit: Habit) => {
-    const todayDay = new Date().getDay(); // 0 = Pazar, 1 = Pazartesi, ...
+  const shouldShowHabit = (habit: Habit, dateStr?: string) => {
+    const checkDate = dateStr || today;
+    const date = new Date(checkDate);
+    const dayOfWeek = date.getDay(); // 0 = Pazar, 1 = Pazartesi, ...
     
+    // Başlangıç tarihi kontrolü
+    // start_date varsa onu kullan, yoksa created_at'in tarih kısmını kullan
+    let startDate = habit.start_date;
+    if (!startDate && habit.created_at) {
+      // created_at formatı: YYYY-MM-DD HH:MM:SS veya ISO string
+      startDate = habit.created_at.split(' ')[0].split('T')[0];
+    }
+
+    if (startDate) {
+      if (checkDate < startDate) return false;
+    }
+
     if (habit.frequency === 'daily') return true;
-    if (habit.frequency === 'weekdays') return todayDay !== 0 && todayDay !== 6;
+    if (habit.frequency === 'weekdays') return dayOfWeek !== 0 && dayOfWeek !== 6;
     if (habit.frequency === 'custom' && habit.custom_days) {
       try {
         const days = JSON.parse(habit.custom_days);
-        return Array.isArray(days) && days.includes(todayDay);
+        return Array.isArray(days) && days.includes(dayOfWeek);
       } catch {
         return false;
       }
@@ -166,7 +200,7 @@ export default function Home() {
     return false;
   };
 
-  const todaysHabits = habits.filter(shouldShowHabit);
+  const todaysHabits = habits.filter(h => shouldShowHabit(h, today));
   const completedHabitIds = useMemo(() => new Set(completions.map((c) => c.habit_id)), [completions]);
 
   const persistNotifiedState = (next: { date: string; ids: number[] }) => {
@@ -245,9 +279,16 @@ export default function Home() {
       noteContent: '',
       loading: true,
     });
+    setSelectedDayCompletions([]);
 
     try {
-      const note = await getNoteByDate(date);
+      const [note, completionsData] = await Promise.all([
+        getNoteByDate(date).catch(() => ({ content: '' })),
+        getCompletions({ start_date: date, end_date: date }).catch(() => [])
+      ]);
+
+      setSelectedDayCompletions(completionsData);
+
       setSelectedDay((prev) => {
         if (!prev || prev.date !== date) return prev;
         const content = (note?.content || '').trim();
@@ -259,7 +300,7 @@ export default function Home() {
         };
       });
     } catch (error) {
-      console.error('Gün notu yüklenemedi:', error);
+      console.error('Gün detayları yüklenemedi:', error);
       setSelectedDay((prev) => (prev && prev.date === date ? { ...prev, loading: false } : prev));
     }
   }
@@ -410,13 +451,13 @@ export default function Home() {
 
           {/* Seçili Gün Bilgisi */}
           {selectedDay && (
-            <div className="rounded-2xl border border-border-light dark:border-[#32675a] bg-white dark:bg-white/5 p-5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex items-start justify-between gap-3">
+            <div className="rounded-2xl border border-border-light dark:border-[#32675a] bg-white dark:bg-white/5 p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-start justify-between gap-3 mb-6">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-white/40">
                     Seçili Gün
                   </p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white mt-0.5">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                     {formatDateTR(selectedDay.date)}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-white/60 mt-1">
@@ -425,13 +466,88 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setSelectedDay(null)}
-                  className="text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white rounded-full p-2 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/5 flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
+              {/* Timeline */}
+              <div className="relative mt-2 space-y-0">
+                {selectedDay.loading ? (
+                  <div className="text-sm text-gray-500 dark:text-white/50 italic pl-4">Yükleniyor...</div>
+                ) : (
+                  (() => {
+                    const dayHabits = habits.filter(h => shouldShowHabit(h, selectedDay.date));
+                    if (dayHabits.length === 0) {
+                      return <div className="text-sm text-gray-500 dark:text-white/50 italic pl-4">Bu gün için planlanmış görev yok.</div>;
+                    }
+                    
+                    return dayHabits.map((habit, index) => {
+                      const completion = selectedDayCompletions.find(c => c.habit_id === habit.id);
+                      const isCompleted = !!completion;
+                      const isPast = selectedDay.date < today;
+                      const isLast = index === dayHabits.length - 1;
+                      
+                      return (
+                        <div key={habit.id} className="relative pl-8 pb-8 last:pb-0">
+                          {/* Vertical Line */}
+                          {!isLast && (
+                            <div className="absolute left-[11px] top-6 bottom-0 w-[2px] bg-gray-100 dark:bg-white/10" />
+                          )}
+
+                          {/* Dot */}
+                          <div 
+                            className={`absolute left-0 top-1 size-6 rounded-full border-2 transition-colors z-10 flex items-center justify-center ${
+                              isCompleted 
+                                ? 'bg-green-500 border-green-500' 
+                                : isPast 
+                                  ? 'bg-gray-100 dark:bg-white/5 border-gray-300 dark:border-white/20' 
+                                  : 'bg-white dark:bg-[#1a1a1a] border-blue-400 dark:border-blue-500'
+                            }`}
+                          >
+                            {isCompleted && <CheckCircle2 size={14} className="text-white" />}
+                            {!isCompleted && !isPast && <div className="size-2 rounded-full bg-blue-400 dark:bg-blue-500" />}
+                          </div>
+
+                          <div className="flex flex-col gap-1.5 -mt-0.5">
+                            <h4 className={`font-semibold text-base leading-none ${isCompleted ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-white/80'}`}>
+                              {habit.title}
+                            </h4>
+                            
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
+                                isCompleted 
+                                  ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20' 
+                                  : isPast 
+                                    ? 'bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-white/40 border-gray-200 dark:border-white/10' 
+                                    : 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20'
+                              }`}>
+                                {isCompleted ? 'Tamamlandı' : isPast ? 'Tamamlanmadı' : 'Bekliyor'}
+                              </span>
+                              
+                              {isCompleted && completion?.created_at && (
+                                <span className="text-xs text-gray-400 dark:text-white/40 font-mono">
+                                  {formatTime(completion.created_at)}
+                                </span>
+                              )}
+                              
+                              {!isCompleted && habit.scheduled_time && (
+                                <span className="text-xs text-gray-400 dark:text-white/40 flex items-center gap-1 font-mono">
+                                  <Clock size={12} />
+                                  {habit.scheduled_time}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
                 <StickyNote size={18} className="mt-0.5 flex-shrink-0 text-amber-400" />
                 {selectedDay.loading ? (
                   <span className="italic text-gray-400">Not yükleniyor...</span>

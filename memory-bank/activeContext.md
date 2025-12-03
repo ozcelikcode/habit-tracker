@@ -5,6 +5,19 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 
 ## Son Yapılan Değişiklikler
 
+### Pomodoro Sayfası Yenilemesi (Modern UI)
+- **Tasarım**: Eski dijital saat görünümü yerine modern, dairesel (circular) SVG tabanlı bir zamanlayıcıya geçildi.
+- **Görsellik**:
+  - `var(--color-primary)` ile tema uyumlu renkler ve "glow" efektleri eklendi.
+  - İlerleme durumu dairesel barın dolmasıyla görselleştirildi.
+- **İşlevsellik**:
+  - Süreye tıklayarak düzenleme (inline edit) özelliği korundu ve iyileştirildi.
+  - Hızlı süre seçim butonları (Preset) eski stiline (büyük butonlar, "dk" etiketi) döndürüldü.
+- **Detaylar**:
+  - "Toplam Odak" ve "Tamamlanan" istatistik kartları eklendi.
+  - Görev listesi daha detaylı hale getirildi; her görev için ilerleme çubuğu ve kalan süre bilgisi eklendi.
+  - UI Düzenlemesi: Saat ve durum metni arasındaki çakışma giderildi.
+
 ### Seçili Gün Detay Görünümü (Timeline)
 - **Home Sayfası**: Contribution Calendar'da bir güne tıklandığında açılan detay bölümü tamamen yenilendi.
 - **Dikey Timeline**: Seçilen günün görevleri dikey bir zaman çizelgesi (stepper) şeklinde listeleniyor.

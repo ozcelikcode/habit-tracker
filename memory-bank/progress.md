@@ -57,6 +57,7 @@
 - [x] **Habits Sayfası**: Animasyonlar azaltıldı, tarih başlığı eklendi.
 - [x] **Home Sayfası**: Tarih başlığı eklendi.
 - [x] **Pomodoro Sayfası**: Tasarım yenilendi (dijital saat), özel süre girişi eklendi, tarih başlığı eklendi.
+- [x] **Pomodoro UI Revizyonu (Modern)**: Dairesel zamanlayıcı, gelişmiş istatistikler ve detaylı görev listesi ile modern bir görünüm kazandırıldı.
 - [x] **Takvim Mantığı**: Renk skalası göreceli hale getirildi.
 - [x] **Ayarlar**: Zaman dilimi seçimi eklendi.
 - [x] **Seçili Gün Detay Görünümü**: Dikey timeline (stepper) görünümü eklendi.

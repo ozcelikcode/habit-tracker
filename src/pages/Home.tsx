@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Repeat, CalendarDays, Clock, Timer, StickyNote, Save, Loader2, X, Bell, BellRing } from 'lucide-react';
+import { Plus, Repeat, Clock, Timer, StickyNote, Save, Loader2, X, Bell, BellRing } from 'lucide-react';
 import { getHabits, getCompletions, getStats, getCalendarData, completeHabit, uncompleteHabit, getSettings, getTodayNote, saveTodayNote, getNoteDates, getNoteByDate, getHabitProgress } from '../api';
 import type { Habit, Completion, Stats, Settings, DailyNote } from '../types';
-import { FREQUENCY_OPTIONS, WEEKDAYS } from '../types';
+import { FREQUENCY_OPTIONS } from '../types';
 import ContributionCalendar from '../components/ContributionCalendar';
 import { HABIT_ICON_MAP } from '../icons/habitIcons';
 import { ensureServiceWorker, getNotificationStatus, requestNotificationPermission, showHabitNotification } from '../utils/notificationService';
@@ -72,16 +72,6 @@ export default function Home() {
 
   const getFrequencyLabel = (frequency: string) => {
     return FREQUENCY_OPTIONS.find((f) => f.value === frequency)?.label || frequency;
-  };
-
-  const getCustomDaysLabel = (customDays: string | null) => {
-    if (!customDays) return '';
-    try {
-      const days: number[] = JSON.parse(customDays);
-      return days.map((d) => WEEKDAYS.find((w) => w.value === d)?.label).filter(Boolean).join(', ');
-    } catch {
-      return '';
-    }
   };
 
   useEffect(() => {
@@ -324,11 +314,11 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className="max-w-7xl mx-auto w-full pb-10">
       {/* Header Section */}
-      <div className="flex flex-wrap justify-between gap-4 p-4 items-end">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 p-4 sm:p-6">
         <div className="flex min-w-72 flex-col gap-2">
-          <p className="text-gray-800 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+          <p className="text-gray-800 dark:text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.033em]">
             Merhaba, {settings.username}!
           </p>
           <p className="text-[var(--color-primary)] dark:text-[color-mix(in_srgb,var(--color-primary)_70%,white)] text-base font-normal leading-normal">
@@ -337,7 +327,7 @@ export default function Home() {
         </div>
         <Link
           to="/habits/new"
-          className="flex items-center gap-2 bg-primary text-white dark:text-background-dark font-bold text-sm px-5 py-3 rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 bg-primary text-white dark:text-background-dark font-bold text-sm px-5 py-3 rounded-xl hover:opacity-90 transition-all shadow-sm hover:shadow-md active:scale-95"
         >
           <Plus size={20} />
           Yeni Alışkanlık Ekle
@@ -346,20 +336,20 @@ export default function Home() {
 
       {/* Notification CTA */}
       {notificationStatus === 'default' && (
-        <div className="px-4">
-          <div className="mb-4 flex items-start gap-3 rounded-xl border border-border-light dark:border-[#32675a] bg-white/80 dark:bg-white/5 p-4 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Bell size={18} />
+        <div className="px-4 sm:px-6">
+          <div className="mb-6 flex items-start gap-4 rounded-2xl border border-border-light dark:border-[#32675a] bg-white/80 dark:bg-white/5 p-5 shadow-sm backdrop-blur-sm">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Bell size={20} />
             </div>
             <div className="flex-1">
-              <p className="text-gray-800 dark:text-white font-semibold text-sm">Hatirlatma bildirimleri</p>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60 mt-1">
+              <p className="text-gray-900 dark:text-white font-semibold text-sm">Hatırlatma bildirimleri</p>
+              <p className="text-sm text-gray-600 dark:text-white/60 mt-1 leading-relaxed">
                 Planlanan saatlerde cihaz bildirimi gönderebilmemiz için tarayıcı izni vermelisin.
               </p>
               <button
                 onClick={handleEnableNotifications}
                 disabled={notificationLoading}
-                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white dark:text-background-dark hover:opacity-90 disabled:opacity-60"
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white dark:text-background-dark hover:opacity-90 disabled:opacity-60 transition-colors"
               >
                 <BellRing size={16} />
                 {notificationLoading ? 'İzin isteniyor...' : 'Bildirimi aç'}
@@ -369,271 +359,112 @@ export default function Home() {
         </div>
       )}
       {notificationStatus === 'unsupported' && (
-        <div className="px-4">
-          <div className="mb-4 rounded-xl border border-border-light dark:border-[#32675a] bg-white/70 dark:bg-white/5 p-4 text-sm text-gray-600 dark:text-white/60">
+        <div className="px-4 sm:px-6">
+          <div className="mb-6 rounded-xl border border-border-light dark:border-[#32675a] bg-white/70 dark:bg-white/5 p-4 text-sm text-gray-600 dark:text-white/60">
             Tarayıcınız bildirimleri desteklemiyor, ancak hatırlatmalar uygulama içinde gösterilecek.
           </div>
         </div>
       )}
 
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 sm:px-6 mb-6">
+        <div className="flex flex-col gap-1 rounded-2xl p-5 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] shadow-sm">
+          <p className="text-gray-500 dark:text-white/60 text-sm font-medium">Mevcut Seri</p>
+          <p className="text-gray-900 dark:text-white tracking-tight text-3xl font-bold">{stats.currentStreak} <span className="text-base font-normal text-gray-400">gün</span></p>
+        </div>
+        <div className="flex flex-col gap-1 rounded-2xl p-5 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] shadow-sm">
+          <p className="text-gray-500 dark:text-white/60 text-sm font-medium">En Uzun Seri</p>
+          <p className="text-gray-900 dark:text-white tracking-tight text-3xl font-bold">{stats.longestStreak} <span className="text-base font-normal text-gray-400">gün</span></p>
+        </div>
+        <div className="flex flex-col gap-1 rounded-2xl p-5 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] shadow-sm">
+          <p className="text-gray-500 dark:text-white/60 text-sm font-medium">Toplam Tamamlanan</p>
+          <p className="text-gray-900 dark:text-white tracking-tight text-3xl font-bold">{stats.totalCompleted}</p>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-8 mt-6 p-4">
-        {/* Calendar Section */}
-        <div className="flex-1 lg:w-2/3">
-          <h2 className="text-gray-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-            {currentYear} Yılındaki Katkıların
-          </h2>
-          <p className="text-gray-600 dark:text-white/60 text-base font-normal leading-normal pb-6 pt-1 px-4">
-            Bu takvim, son bir yıldaki alışkanlık tamamlama ilerlemenizi gösterir. Renk tonları, o günkü tamamlama
-            oranını temsil eder.
-          </p>
-          <ContributionCalendar
-            data={calendarData}
-            totalHabits={totalHabits}
-            year={currentYear}
-            noteDates={noteDates}
-            onDayClick={handleDayClick}
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 sm:p-6 pt-0">
+        {/* Left Column */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="rounded-2xl border border-border-light dark:border-[#32675a] bg-white dark:bg-white/5 p-6 shadow-sm">
+            <h2 className="text-gray-900 dark:text-white text-xl font-bold leading-tight tracking-tight mb-2">
+              {currentYear} Yılındaki Katkıların
+            </h2>
+            <p className="text-gray-500 dark:text-white/60 text-sm font-normal leading-relaxed mb-6">
+              Bu takvim, son bir yıldaki alışkanlık tamamlama ilerlemenizi gösterir. Renk tonları, o günkü tamamlama oranını temsil eder.
+            </p>
+            <ContributionCalendar
+              data={calendarData}
+              totalHabits={totalHabits}
+              year={currentYear}
+              noteDates={noteDates}
+              onDayClick={handleDayClick}
+            />
+          </div>
 
           {/* Seçili Gün Bilgisi */}
           {selectedDay && (
-            <div className="mt-4 mx-4 mb-2 rounded-xl border border-border-light dark:border-[#32675a] bg-white/90 dark:bg-black/40 p-4 max-w-xl">
+            <div className="rounded-2xl border border-border-light dark:border-[#32675a] bg-white dark:bg-white/5 p-5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-white/40">
+                  <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-white/40">
                     Seçili Gün
                   </p>
-                  <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mt-0.5">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white mt-0.5">
                     {formatDateTR(selectedDay.date)}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-white/60 mt-1">
                     {selectedDay.count}/{selectedDay.total} görev tamamlandı
                   </p>
                 </div>
                 <button
                   onClick={() => setSelectedDay(null)}
-                  className="text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white rounded-full p-1 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
               </div>
 
-              <div className="mt-3 flex items-start gap-2 text-xs sm:text-sm text-gray-700 dark:text-white/70">
-                <StickyNote size={16} className="mt-0.5 flex-shrink-0 text-amber-400" />
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/5 flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
+                <StickyNote size={18} className="mt-0.5 flex-shrink-0 text-amber-400" />
                 {selectedDay.loading ? (
-                  <span>Not yükleniyor...</span>
+                  <span className="italic text-gray-400">Not yükleniyor...</span>
                 ) : selectedDay.hasNote && selectedDay.noteContent ? (
-                  <p className="whitespace-pre-wrap break-words">{selectedDay.noteContent}</p>
+                  <p className="whitespace-pre-wrap break-words leading-relaxed">{selectedDay.noteContent}</p>
                 ) : (
-                  <span>Bu gün için kayıtlı bir not bulunmuyor.</span>
+                  <span className="text-gray-400 dark:text-white/40 italic">Bu gün için kayıtlı bir not bulunmuyor.</span>
                 )}
               </div>
             </div>
           )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="lg:w-1/3 mt-5 lg:mt-0">
-          {/* Stats */}
-          <div className="flex flex-col gap-4">
-            <h2 className="text-gray-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5 lg:pt-0">
-              İstatistikler
-            </h2>
-            <div className="flex flex-col gap-4">
-              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a]">
-                <p className="text-gray-600 dark:text-white/70 text-base font-medium leading-normal">Mevcut Seri</p>
-                <p className="text-gray-800 dark:text-white tracking-light text-3xl font-bold leading-tight">{stats.currentStreak} gün</p>
-              </div>
-              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a]">
-                <p className="text-gray-600 dark:text-white/70 text-base font-medium leading-normal">En Uzun Seri</p>
-                <p className="text-gray-800 dark:text-white tracking-light text-3xl font-bold leading-tight">{stats.longestStreak} gün</p>
-              </div>
-              <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a]">
-                <p className="text-gray-600 dark:text-white/70 text-base font-medium leading-normal">Toplam Tamamlanan</p>
-                <p className="text-gray-800 dark:text-white tracking-light text-3xl font-bold leading-tight">{stats.totalCompleted}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Today's Tasks */}
-          <div className="mt-8">
-            <h2 className="text-gray-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-              Bugünün Görevleri
-            </h2>
-            <div className="flex flex-col gap-3 p-4 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
-              {todaysHabits.length === 0 ? (
-                <div className="text-center py-8">
-                  {habits.length === 0 ? (
-                    <p className="text-gray-500 dark:text-white/50">
-                      Henüz alışkanlık eklemediniz.{' '}
-                      <Link to="/habits/new" className="text-primary hover:underline">
-                        Yeni ekle
-                      </Link>
-                    </p>
-                  ) : (
-                    <p className="text-gray-500 dark:text-white/50">
-                      Bugün için planlanmış görev bulunmuyor.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                todaysHabits.map((habit) => {
-                  const isCompleted = completedHabitIds.has(habit.id);
-                  const remaining = dailyProgress[habit.id] !== undefined ? dailyProgress[habit.id] : (habit.duration_minutes || 0);
-
-                  return (
-                    <div
-                      key={habit.id}
-                      className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
-                        isCompleted 
-                          ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-[#32675a]/50' 
-                          : 'border-gray-200 dark:border-[#32675a] hover:border-primary/30'
-                      }`}
-                      style={!isCompleted ? {
-                        backgroundColor: `color-mix(in srgb, ${habit.color} 5%, transparent)`,
-                        borderColor: `color-mix(in srgb, ${habit.color} 20%, transparent)`
-                      } : undefined}
-                    >
-                      {/* Checkbox */}
-                      <label className="flex items-center cursor-pointer mt-1">
-                        <input
-                          type="checkbox"
-                          checked={isCompleted}
-                          onChange={() => toggleHabit(habit.id)}
-                          className="size-5 bg-transparent border-2 border-gray-400 dark:border-white/30 rounded text-primary focus:ring-primary cursor-pointer"
-                          style={{ accentColor: habit.color }}
-                        />
-                      </label>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          {habit.icon && HABIT_ICON_MAP[habit.icon] && (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/90 dark:bg-black/40 text-gray-800 dark:text-white">
-                              {(() => {
-                                const IconComp = HABIT_ICON_MAP[habit.icon];
-                                return <IconComp size={16} />;
-                              })()}
-                            </span>
-                          )}
-                          <span
-                            className={`font-medium ${isCompleted ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-800 dark:text-white'}`}
-                          >
-                            {habit.title}
-                          </span>
-                          <div
-                            className="size-2.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: habit.color }}
-                          />
-                        </div>
-                        
-                        {habit.subtitle && (
-                          <p className={`text-sm mt-0.5 ${isCompleted ? 'text-gray-400 dark:text-white/30' : 'text-gray-500 dark:text-white/50'}`}>
-                            {habit.subtitle}
-                          </p>
-                        )}
-
-                        {/* Detay Bilgileri */}
-                        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                          {/* Frequency - Her zaman göster */}
-                          <span className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                            isCompleted 
-                              ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
-                              : 'bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/60'
-                          }`}>
-                            <Repeat size={14} />
-                            {getFrequencyLabel(habit.frequency)}
-                          </span>
-
-                          {/* Custom Days */}
-                          {habit.frequency === 'custom' && habit.custom_days && (
-                            <span className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                              isCompleted 
-                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
-                                : 'bg-accent-teal/10 text-accent-teal'
-                            }`}>
-                              <CalendarDays size={14} />
-                              {getCustomDaysLabel(habit.custom_days)}
-                            </span>
-                          )}
-
-                          {/* Scheduled Time */}
-                          {habit.scheduled_time ? (
-                            <span className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                              isCompleted 
-                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
-                                : 'bg-primary/10 text-primary'
-                            }`}
-                            style={!isCompleted ? {
-                                backgroundColor: `color-mix(in srgb, ${habit.color} 10%, transparent)`,
-                                color: habit.color
-                            } : undefined}
-                            >
-                              <Clock size={14} />
-                              {habit.scheduled_time}
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">
-                              <Clock size={14} />
-                              Saat yok
-                            </span>
-                          )}
-                          
-                          {/* Duration */}
-                          {habit.duration_minutes ? (
-                            <span className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                              isCompleted 
-                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
-                                : 'bg-accent-orange/10 text-accent-orange'
-                            }`}
-                            style={!isCompleted ? {
-                                backgroundColor: `color-mix(in srgb, ${habit.color} 10%, transparent)`,
-                                color: habit.color
-                            } : undefined}
-                            >
-                              <Timer size={14} />
-                              {formatDuration(remaining)}
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30">
-                              <Timer size={14} />
-                              Süre yok
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
 
           {/* Daily Note */}
-          <div className="mt-8">
-            <h2 className="text-gray-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5 flex items-center gap-2">
-              <StickyNote size={22} className="text-primary" />
-              Günün Notu
-            </h2>
-            <div className="p-4 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-xl">
+          <div className="rounded-2xl border border-border-light dark:border-[#32675a] bg-white dark:bg-white/5 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 flex items-center gap-2">
+              <StickyNote size={20} className="text-primary" />
+              <h2 className="text-gray-900 dark:text-white text-lg font-bold leading-tight">
+                Günün Notu
+              </h2>
+            </div>
+            <div className="p-4">
               <textarea
                 value={dailyNote.content}
                 onChange={(e) => setDailyNote({ ...dailyNote, content: e.target.value })}
                 placeholder="Bugün için notlarınızı buraya yazın..."
-                className="w-full h-32 px-4 py-3 bg-white dark:bg-white/5 border border-border-light dark:border-[#32675a] rounded-lg text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                className="w-full h-32 px-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm leading-relaxed transition-all"
               />
               <div className="flex items-center justify-between mt-3">
                 <p className="text-gray-400 dark:text-white/30 text-xs">
-                  Sadece bugün için not ekleyebilirsiniz
+                  Sadece bugün için
                 </p>
                 <button
                   onClick={handleSaveNote}
                   disabled={noteSaving}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                     noteSaved
-                      ? 'bg-green-500/20 text-green-500 border border-green-500/30'
-                      : 'bg-primary text-white dark:text-background-dark hover:opacity-90'
-                  } disabled:opacity-50`}
+                      ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
+                      : 'bg-primary text-white dark:text-background-dark hover:opacity-90 shadow-sm hover:shadow'
+                  } disabled:opacity-50 disabled:shadow-none`}
                 >
                   {noteSaving ? (
                     <>
@@ -656,7 +487,144 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Sidebar */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Today's Tasks */}
+          <div className="rounded-2xl border border-border-light dark:border-[#32675a] bg-white dark:bg-white/5 shadow-sm overflow-hidden sticky top-6">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5">
+              <h2 className="text-gray-900 dark:text-white text-lg font-bold leading-tight">
+                Bugünün Görevleri
+              </h2>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+              {todaysHabits.length === 0 ? (
+                <div className="text-center py-8 px-4">
+                  {habits.length === 0 ? (
+                    <p className="text-gray-500 dark:text-white/50 text-sm">
+                      Henüz alışkanlık eklemediniz.{' '}
+                      <Link to="/habits/new" className="text-primary hover:underline font-medium">
+                        Yeni ekle
+                      </Link>
+                    </p>
+                  ) : (
+                    <p className="text-gray-500 dark:text-white/50 text-sm">
+                      Bugün için planlanmış görev bulunmuyor.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                todaysHabits.map((habit) => {
+                  const isCompleted = completedHabitIds.has(habit.id);
+                  const remaining = dailyProgress[habit.id] !== undefined ? dailyProgress[habit.id] : (habit.duration_minutes || 0);
+
+                  return (
+                    <div
+                      key={habit.id}
+                      className={`group flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 ${
+                        isCompleted 
+                          ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-[#32675a]/50 opacity-75' 
+                          : 'bg-white dark:bg-transparent border-gray-200 dark:border-[#32675a] hover:border-primary/40 hover:shadow-sm'
+                      }`}
+                      style={!isCompleted ? {
+                        borderColor: `color-mix(in srgb, ${habit.color} 30%, transparent)`
+                      } : undefined}
+                    >
+                      {/* Checkbox */}
+                      <label className="relative flex items-center justify-center cursor-pointer mt-0.5 size-6 flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={isCompleted}
+                          onChange={() => toggleHabit(habit.id)}
+                          className="peer appearance-none size-5 rounded-md border-2 border-gray-300 dark:border-white/30 checked:bg-current checked:border-current transition-all cursor-pointer"
+                          style={{ color: habit.color }}
+                        />
+                        <span className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </span>
+                      </label>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {habit.icon && HABIT_ICON_MAP[habit.icon] && (
+                            <span className={`inline-flex items-center justify-center size-6 rounded-lg text-gray-700 dark:text-white ${isCompleted ? 'bg-gray-200 dark:bg-white/10' : 'bg-gray-100 dark:bg-white/10'}`}>
+                              {(() => {
+                                const IconComp = HABIT_ICON_MAP[habit.icon];
+                                return <IconComp size={14} />;
+                              })()}
+                            </span>
+                          )}
+                          <span
+                            className={`font-semibold text-sm truncate ${isCompleted ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-800 dark:text-white'}`}
+                          >
+                            {habit.title}
+                          </span>
+                        </div>
+                        
+                        {habit.subtitle && (
+                          <p className={`text-xs mb-2 truncate ${isCompleted ? 'text-gray-400 dark:text-white/30' : 'text-gray-500 dark:text-white/50'}`}>
+                            {habit.subtitle}
+                          </p>
+                        )}
+
+                        {/* Detay Bilgileri */}
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px]">
+                          {/* Frequency */}
+                          <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md font-medium ${
+                            isCompleted 
+                              ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
+                              : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/60'
+                          }`}>
+                            <Repeat size={10} />
+                            {getFrequencyLabel(habit.frequency)}
+                          </span>
+
+                          {/* Scheduled Time */}
+                          {habit.scheduled_time && (
+                            <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md font-medium ${
+                              isCompleted 
+                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
+                                : 'bg-primary/10 text-primary'
+                            }`}
+                            style={!isCompleted ? {
+                                backgroundColor: `color-mix(in srgb, ${habit.color} 10%, transparent)`,
+                                color: habit.color
+                            } : undefined}
+                            >
+                              <Clock size={10} />
+                              {habit.scheduled_time}
+                            </span>
+                          )}
+                          
+                          {/* Duration */}
+                          {habit.duration_minutes && (
+                            <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md font-medium ${
+                              isCompleted 
+                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30' 
+                                : 'bg-accent-orange/10 text-accent-orange'
+                            }`}
+                            style={!isCompleted ? {
+                                backgroundColor: `color-mix(in srgb, ${habit.color} 10%, transparent)`,
+                                color: habit.color
+                            } : undefined}
+                            >
+                              <Timer size={10} />
+                              {formatDuration(remaining)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

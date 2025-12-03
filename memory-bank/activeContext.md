@@ -36,7 +36,12 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
   - Anlık süre ve aktif görev bilgisi gösterilir.
   - Üst kısımda ince bir progress bar bulunur.
 
-### Home Sayfası İyileştirmeleri (1 Aralık 2025)
+### Home Sayfası İyileştirmeleri (3 Aralık 2025)
+- **Layout Revizyonu**: "İstatistikler, Bugünün Görevleri ve Günün Notu alt alta durması kötü görünüyor" geri bildirimi üzerine sayfa yapısı değiştirildi.
+- **Yeni Grid Yapısı**:
+  - **İstatistikler**: Sidebar'dan çıkarılıp en üste, yatay (3 sütunlu) bir grid olarak taşındı.
+  - **Sol Kolon (8 birim)**: Katkı Takvimi, Seçili Gün Bilgisi ve Günün Notu (daha geniş alan).
+  - **Sağ Kolon (4 birim)**: Sadece "Bugünün Görevleri" listesi. Bu sayede liste uzadığında diğer öğeleri aşağı itmiyor.
 - **Süre Senkronizasyonu**: Home sayfasındaki görev kartları artık `habit_daily_progress` tablosundan kalan süreyi çekiyor. Pomodoro sayfasındaki ilerleme anlık olarak yansıyor.
 - **Görsel İyileştirme**: Görev kartları artık alışkanlığın kendi rengini (background ve border) tüm kutuya uyguluyor (`color-mix` ile opaklık ayarlı).
 - **Seri Mantığı Güncellemesi**: "Mevcut Seri" artık 1 gün değil, **3 gün** boyunca görev yapılmazsa sıfırlanıyor.

@@ -78,7 +78,8 @@
 - [x] **Veri Kalıcılığı (Persistence)**: Sayfa yenilendiğinde timer durumu ve çalışılan süre korunur. Yarım kalan oturumlar otomatik olarak düşülür.
 - [x] **Detaylı Görev Görünümü**: Görev kartlarında tamamlanan/kalan süre bilgisi ve progress bar.
 
-### Home Sayfası İyileştirmeleri (1 Aralık 2025)
+### Home Sayfası İyileştirmeleri (3 Aralık 2025)
+- [x] **Layout Revizyonu**: İstatistikler, Takvim, Notlar ve Görevler daha dengeli bir grid yapısına kavuşturuldu.
 - [x] **Süre Senkronizasyonu**: Home sayfasında kalan süre gösterimi `habit_daily_progress` ile senkronize edildi.
 - [x] **Seri Mantığı**: Seri sıfırlama toleransı 3 güne çıkarıldı.
 - [x] **Kart Tasarımı**: Görev kartları alışkanlık rengine göre dinamik olarak renklendirildi.

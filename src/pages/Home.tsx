@@ -643,7 +643,7 @@ export default function Home() {
                   return (
                     <div
                       key={habit.id}
-                      className={`group flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 ${
+                      className={`group flex items-start gap-3 p-4 lg:p-3 rounded-xl border transition-all duration-200 ${
                         isCompleted 
                           ? 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-[#32675a]/50 opacity-75' 
                           : 'bg-white dark:bg-transparent border-gray-200 dark:border-[#32675a] hover:border-primary/40 hover:shadow-sm'
@@ -653,16 +653,16 @@ export default function Home() {
                       } : undefined}
                     >
                       {/* Checkbox */}
-                      <label className="relative flex items-center justify-center cursor-pointer mt-0.5 size-6 flex-shrink-0">
+                      <label className="relative flex items-center justify-center cursor-pointer mt-0.5 size-8 lg:size-6 flex-shrink-0">
                         <input
                           type="checkbox"
                           checked={isCompleted}
                           onChange={() => toggleHabit(habit.id)}
-                          className="peer appearance-none size-5 rounded-md border-2 border-gray-300 dark:border-white/30 checked:bg-current checked:border-current transition-all cursor-pointer"
+                          className="peer appearance-none size-6 lg:size-5 rounded-md border-2 border-gray-300 dark:border-white/30 checked:bg-current checked:border-current transition-all cursor-pointer"
                           style={{ color: habit.color }}
                         />
                         <span className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="size-4 lg:size-3.5">
                             <polyline points="20 6 9 17 4 12"></polyline>
                           </svg>
                         </span>

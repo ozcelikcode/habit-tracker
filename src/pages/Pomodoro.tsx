@@ -313,7 +313,7 @@ export default function Pomodoro() {
                     <div
                       key={habit.id}
                       onClick={() => selectHabit(habit.id)}
-                      className={`group flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+                      className={`group flex items-start gap-3 p-4 lg:p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
                         isSelected
                           ? 'bg-[var(--color-primary)]/5 border-[var(--color-primary)]/30'
                           : isCompleted 
@@ -330,14 +330,14 @@ export default function Pomodoro() {
                           e.stopPropagation();
                           toggleHabit(habit.id);
                         }}
-                        className={`flex-shrink-0 mt-0.5 transition-colors ${
+                        className={`flex-shrink-0 mt-0.5 p-1 -m-1 rounded-full transition-colors ${
                           isCompleted ? 'text-green-500' : 'text-gray-300 dark:text-white/20 group-hover:text-[var(--color-primary)]'
                         }`}
                       >
                         {isCompleted ? (
-                          <CheckCircle2 size={20} className="fill-current" />
+                          <CheckCircle2 size={24} className="fill-current lg:w-5 lg:h-5" />
                         ) : (
-                          <Circle size={20} />
+                          <Circle size={24} className="lg:w-5 lg:h-5" />
                         )}
                       </button>
 

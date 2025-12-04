@@ -52,6 +52,11 @@ Proje temel özellikleriyle tamamlandı ve çalışır durumda. Site genelinde d
 - **Süre Senkronizasyonu**: `habit_daily_progress` entegrasyonu.
 - **Seri Mantığı**: 3 gün tolerans.
 
+### Mobil/Tablet Optimizasyonu (4 Aralık 2025)
+- **Dokunmatik Hedefler**: Checkbox ve buton boyutları mobil cihazlar için büyütüldü (`size-8`, `p-4`).
+- **Görünürlük**: `Habits` sayfasındaki düzenle/sil butonları mobilde sürekli görünür yapıldı (hover yerine).
+- **Liste Düzeni**: Görev listesi elemanlarının padding değerleri artırılarak dokunma kolaylığı sağlandı.
+
 ## Aktif Kararlar
 
 ### Timeline Görünümü

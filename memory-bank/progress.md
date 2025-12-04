@@ -62,6 +62,8 @@
 - [x] **Ayarlar**: Zaman dilimi seçimi eklendi.
 - [x] **Seçili Gün Detay Görünümü**: Dikey timeline (stepper) görünümü eklendi.
 - [x] **Hata Düzeltmesi**: Yeni eklenen alışkanlıkların görünürlük sorunu (`start_date` kontrolü) giderildi.
+- [x] **Mobil Optimizasyon**: Görev tamamlama tikleri ve listeler mobilde daha büyük ve dokunması kolay hale getirildi.
+- [x] **Mobil UX**: Alışkanlık düzenleme butonları mobilde sürekli görünür yapıldı.
 
 ### Notlar Sistemi (30 Kasım 2025 - Güncel)
 - [x] Notlar sayfası ayrı listeleme (`Notes.tsx`)
